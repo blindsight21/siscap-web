@@ -1,0 +1,63 @@
+@mixin tamanios($width, $height: $width) {
+    height: $height;
+    width: $width;
+}
+@mixin sombra($top, $left, $blur, $color, $inset: false,$importante: null) {
+    @if $inset {
+        -webkit-box-shadow:inset $top $left $blur $color $importante;
+        -moz-box-shadow:inset $top $left $blur $color $importante;
+        box-shadow:inset $top $left $blur $color $importante;
+    } @else {
+        -webkit-box-shadow: $top $left $blur $color $importante;
+        -moz-box-shadow: $top $left $blur $color $importante;
+        box-shadow: $top $left $blur $color $importante;
+    }
+}
+@mixin sombra2($top, $left, $blur, $radio, $color, $inset: false,$importante: null) {
+    @if $inset {
+        -webkit-box-shadow:inset $top $left $blur $radio $color $importante;
+        -moz-box-shadow:inset $top $left $blur $radio $color $importante;
+        box-shadow:inset $top $left $blur $color $radio $importante;
+    } @else {
+        -webkit-box-shadow: $top $left $blur $radio $color $importante;
+        -moz-box-shadow: $top $left $blur $radio $color $importante;
+        box-shadow: $top $left $blur $color $radio $importante;
+    }
+}
+@mixin degradado($color,$porcentajeInicio,$color2,$porcentajeFin,$importante:null){
+    background: $color;
+    background-image: -o-linear-gradient(right top, $color, $color2);
+    background-image: -ms-linear-gradient(right top, $color, $color2);
+    background-image: -webkit-gradient(linear, left top, left bottom, from($color), to($color2));
+    background: -moz-linear-gradient(top,  $color $porcentajeInicio, $color2 $porcentajeFin) $importante;
+    background: linear-gradient(to bottom,  $color $porcentajeInicio,$color2 $porcentajeFin) $importante;
+    background: -webkit-linear-gradient(top,  $color $porcentajeInicio,$color2 $porcentajeFin) $importante;
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='$color', endColorstr='$color2',GradientType=0 ) $importante;
+}
+@mixin bordeRadio($arribaIzquierda,$arribaDerecha,$abajoIzquierda,$abajoDerecho,$importante:null){
+    -webkit-border-top-left-radius: $arribaIzquierda $importante;
+    -webkit-border-top-right-radius: $arribaDerecha $importante;
+    -webkit-border-bottom-right-radius: $abajoDerecho $importante;
+    -webkit-border-bottom-left-radius: $abajoIzquierda $importante;
+    -moz-border-radius-topleft: $arribaIzquierda $importante;
+    -moz-border-radius-topright: $arribaDerecha $importante;
+    -moz-border-radius-bottomright: $abajoDerecho $importante;
+    -moz-border-radius-bottomleft: $abajoIzquierda $importante;
+    border-top-left-radius: $arribaIzquierda $importante;
+    border-top-right-radius: $arribaDerecha $importante;
+    border-bottom-right-radius: $abajoDerecho $importante;
+    border-bottom-left-radius: $abajoIzquierda $importante;
+}
+@mixin degradadoStepsMenu($angulo,$colorInicio,$colorCentro,$colorFin){
+    background: -moz-linear-gradient($angulo,$colorInicio,$colorCentro,$colorFin);
+    background: -webkit-linear-gradient($angulo,$colorInicio,$colorCentro,$colorFin);
+    background: linear-gradient($angulo,$colorInicio,$colorCentro,$colorFin);
+}
+@mixin rotar($angulo){
+    -webkit-transform: rotate($angulo);
+    -moz-transform: rotate($angulo);
+    -o-transform: rotate($angulo);
+    transform: rotate($angulo);
+}
+
+

@@ -1,0 +1,151 @@
+<f:view contentType="text/html"
+        xmlns="http://www.w3.org/1999/xhtml"
+        xmlns:f="http://java.sun.com/jsf/core"
+        xmlns:p="http://primefaces.org/ui" 
+        xmlns:h="http://java.sun.com/jsf/html">
+
+    <p:panelGrid columns="1" columnClasses="ui-grid-col-12" layout="grid" class="panelEjecucion">
+            <p:panelGrid columns="1" columnClasses="ui-grid-col-12" layout="grid" class="panelPublicoObjetivo">
+                <f:facet name="header">
+                PARTICIPANTES POR ACTIVIDAD
+            </f:facet>
+                <p:commandButton value="Nuevo Participante"
+                                 class="pfloatR"
+                                 update="idformParticipante"
+                                 rendered="#{actividadGEAdministrado.obtenerEstado(actividadGobAdministrado.entidadSeleccionada) eq 'EJECUTADO' ? false : true}"
+                                 actionListener="#{participanteAdministrado.limpiarParticipante('1')}"
+                                 oncomplete="PF('dialogoNuevoParticipante').show()"
+                                 title="Nuevo Participante"                                 
+                                 icon="ui-icon-plus">
+                </p:commandButton>
+
+                <p:dataTable id="tablaParticipante"
+                             widgetVar="tablaParticipante"
+                             var="itemParticipante"
+                             value="#{participanteAdministrado.participanteList}"
+                             selection="#{participanteAdministrado.entidadSeleccionada}"
+                             rowKey="#{itemParticipante.nidParticipante}"
+                             scrollRows="120" 
+                             scrollable="true"
+                             scrollHeight="130"
+                             onExpandStart="true">
+                    <p:column headerText="ACCIONES" class="pleft" width="10%" rendered="#{actividadGEAdministrado.obtenerEstado(actividadGobAdministrado.entidadSeleccionada) eq 'EJECUTADO' ? false : true}">
+                        <p:commandButton id="tablaPersonaSiscap" 
+                                         update="@(.panelPublicoObjetivo) @(.panelEjecucion)" process="@this"
+                                         title="Anular" icon="ui-icon-trash" actionListener="#{participanteAdministrado.removeParticipanteList(itemParticipante,actividadGobAdministrado.entidadSeleccionada)}">
+                            <p:confirm header="Confirmacion" message="Se anulara el elemento seleccionado, desea continuar?" icon="ui-icon-alert" />
+                        </p:commandButton>                
+                    </p:column>
+                    <p:column headerText="DNI" class="pcenter" width="10%">
+                        <p:outputLabel value="#{itemParticipante.nidPersonaSiscap.txtDocumento}"/>
+                    </p:column>
+                    <p:column headerText="NOMBRES Y APELLIDOS" class="pleft" width="60%">
+                        <p:outputLabel value="#{itemParticipante.nidPersonaSiscap.txtApellidoPaterno} #{itemParticipante.nidPersonaSiscap.txtApellidoMaterno} 
+                                       #{itemParticipante.nidPersonaSiscap.txtNombres}"/>
+                    </p:column>
+                    <p:column headerText="PUBLICO OBJETIVO" class="pleft" width="20%">
+                        <p:outputLabel value="#{itemParticipante.nidPublicoObjetivo.txtPublicoObjetivo}"/>
+                    </p:column>
+                    <p:column headerText="SEXO" class="pleft" width="20%">
+                        <p:outputLabel value="#{itemParticipante.nidPersonaSiscap.txtSexo eq 'M' ? 'MASCULINO':'FEMENINO'}"/>
+                    </p:column>
+                </p:dataTable>
+                <h:commandLink class="pfloatR" disabled="#{!usuarioAdministrado.usuarioActivoEsAdministrador(usuarioAdministrado.entidadSeleccionada)}">
+                    <p:graphicImage name="imagen/xls.png" width="24"/>
+                    <p:dataExporter type="xls" target="tablaParticipante" fileName="ConsolidadoParticipante"/>
+                </h:commandLink>
+                <p:panelGrid  columns="6" columnClasses="ui-grid-col-2,ui-grid-col-2,ui-grid-col-2,ui-grid-col-2,ui-grid-col-2,ui-grid-col-2" layout="grid">
+                    <p:outputLabel for="femenino" value="FEMENINO: " />
+                    <h:outputText id="femenino" value="#{actividadGobAdministrado.entidadSeleccionada.numContadorFemenino}"/>
+                    <p:outputLabel for="masculino" value="MASCULINO: " />
+                    <h:outputText id="masculino" value="#{actividadGobAdministrado.entidadSeleccionada.numContadorMasculino}"/>
+                    <p:outputLabel for="total" value="TOTAL:" style="font-weight: bold;"/>
+                    <h:outputText id="total" value="#{actividadGobAdministrado.entidadSeleccionada.numContadorTotal}"/>
+                </p:panelGrid>
+            </p:panelGrid>
+        <p:separator style="border: 0.5px solid #b4b9bd !important;" 
+                     rendered="#{actividadGEAdministrado.obtenerEstado(actividadGobAdministrado.entidadSeleccionada) eq 'EJECUTADO' 
+                                 ? false : true}"/>
+        <p:panelGrid columns="1" columnClasses="ui-grid-col-12" layout="grid"  class="panelResultado">
+            <f:facet name="header">
+                ADJUNTAR ASISTENCIA(SOLO ARCHIVOS PDF)
+            </f:facet> 
+            <p:fileUpload rendered="#{actividadGEAdministrado.obtenerEstado(actividadGobAdministrado.entidadSeleccionada) eq 'EJECUTADO' ? false : true}"
+                          fileUploadListener="#{fileUploadViewAdministrado.handleFileUpload}" mode="advanced" dragDropSupport="false" multiple="true"
+                          update=":formularioPrincipal:mensajes, @(.tablaArchivoAsistencia)" sizeLimit="10000000" fileLimit="2" allowTypes="/(\.|\/)(pdf)$/"  
+                          invalidFileMessage="El tipo de archivo es incorrecto, solo se admite formato PDF" 
+                          invalidSizeMessage="El tamaño del PDF es invalido, solo se aceptan archivos PDF de 10000KB"
+                          fileLimitMessage="Se excedio la cantidad permitida de subida"
+                          cancelLabel="Cancelar" label="Archivo" uploadLabel="Adjuntar" />
+            <p:dataTable id="tablaArchivoAsistencia"
+                         class="tablaArchivoAsistencia"
+                         widgetVar="tablaArchivoAsistencia"
+                         var="itemArchivoAsistencia"
+                         value="#{fileUploadViewAdministrado.archivoAsistenciaList}"
+                         selection="#{fileUploadViewAdministrado.entidadSeleccionada}"
+                         rowKey="#{itemArchivoAsistencia}"
+                         rows="5"
+                         scrollable="true"
+                         scrollHeight="50"
+                         onExpandStart="true">
+
+                <p:column headerText="ACCIONES"  width="15%" class="pcenter" >
+                    <p:commandButton title="Ver Archivo Asistencia"
+                                     oncomplete="PF('dialogoVerArchivoAsistencia').show();"
+                                     action="#{fileUploadViewAdministrado.obtenerPDF(itemArchivoAsistencia.txtArchivo)}"
+                                     update="@(.formDocumentViewer), :formularioPrincipal:mensajes"
+                                     icon="ui-icon-search">
+                    </p:commandButton>
+                    <p:commandButton id="commandButtonDelete"
+                                     update="@(.tablaArchivoAsistencia), :formularioPrincipal:mensajes" process="@this"
+                                     title="Anular Archivo Asistencia" icon="ui-icon-trash"
+                                     rendered="#{actividadGEAdministrado.obtenerEstado(actividadGobAdministrado.entidadSeleccionada) eq 'EJECUTADO' ? false : true}"
+                                     action="#{fileUploadViewAdministrado.anularArchivoAsistencia(itemArchivoAsistencia)}">                  
+                        <p:confirm header="Confirmacion" message="Se anulara el elemento seleccionado, desea continuar?" icon="ui-icon-alert" />
+                    </p:commandButton>
+                </p:column>
+                <p:column headerText="NOMBRE DEL ARCHIVO" width="85%" class="pcenter">
+                    <h:outputText value="#{itemArchivoAsistencia.txtArchivo}"/>
+                </p:column>
+            </p:dataTable>
+        </p:panelGrid>
+        <p:spacer/>
+        <p:panelGrid columns="1" columnClasses="ui-grid-col-12" layout="grid" class="panelResultado">
+            <f:facet name="header">
+                RESULTADOS POR ACTIVIDAD
+            </f:facet>
+            <p:commandButton value="Nuevo Resultado"
+                             class="pfloatR"
+                             update=":idformResultado"
+                             oncomplete="PF('dialogoNuevoResultado').show()"
+                             title="Nuevo Resultado"
+                             action="#{actividadGRAdministrado.limpiarResultado()}" 
+                             rendered="#{actividadGEAdministrado.obtenerEstado(actividadGobAdministrado.entidadSeleccionada) eq 'EJECUTADO' ? false : true}"
+                             icon="ui-icon-plus">
+            </p:commandButton>
+
+            <p:dataTable paginatorPosition="bottom"
+                         id="tablaResultado" 
+                         widgetVar="tablaResultado" 
+                         var="itemResultado"
+                         value="#{actividadGobAdministrado.actividadGRList}"                         
+                         rowKey="#{itemResultado.nidActividadGobResultado}"
+                         scrollRows="120" 
+                         scrollable="true"
+                         scrollHeight="70"
+                         onExpandStart="true">
+
+                <p:ajax event="rowSelect" listener="#{actividadGRAdministrado.setEntidadSeleccionada(itemResultado)}"/>
+                <p:column headerText="TIPO EVALUACION" class="pleft" width="30">
+                    <p:outputLabel value="#{itemResultado.nidNivelEvaluacion.nidTipoEvaluacion.txtTipoEvaluacion}"/>
+                </p:column>
+                <p:column headerText="NIVEL EVALUACION" class="pleft" width="30">
+                    <p:outputLabel value="#{itemResultado.nidNivelEvaluacion.txtNivelEvaluacion}"/>
+                </p:column>
+                <p:column headerText="DESCRIPCION" class="pleft" width="100">
+                    <p:outputLabel value="#{itemResultado.txtActividadGobResultado}"/>
+                </p:column>            
+            </p:dataTable>
+        </p:panelGrid>
+    </p:panelGrid>
+</f:view>

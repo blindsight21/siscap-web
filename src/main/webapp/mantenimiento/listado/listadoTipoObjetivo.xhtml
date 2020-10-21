@@ -1,0 +1,168 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:f="http://java.sun.com/jsf/core"
+                template="/WEB-INF/templates/default.xhtml">
+    <ui:define name="header">
+
+    </ui:define>
+    <ui:define name="content" >
+        <div class="pcenter">
+            <p:outputLabel value="Tipo de Objetivos" class="ptextGradient pred pbold ptitle"/>
+        </div>
+        <p:spacer/>
+
+        <script type="text/javascript">
+            function start() {
+                PF('statusDialog').show();
+            }
+
+            function stop() {
+                PF('statusDialog').hide();
+            }
+        </script>
+
+        <h:form id="formularioPrincipal">
+            <p:growl id="mensajes" showDetail="true" life="#{parametroSiscapAdministrado.tiempoAlertas()}"/>   
+
+            <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+                <p:commandButton value="Si" styleClass="ui-confirmdialog-yes" icon="ui-icon-check"/>
+                <p:commandButton value="No" styleClass="ui-confirmdialog-no" icon="ui-icon-close" />
+            </p:confirmDialog>
+
+            <p:fieldset legend="Filtros/Opciones:" >
+                <p:panelGrid columns="1" columnClasses="ui-grid-col-12" layout="grid" class="pnoborder">
+                    <p:commandButton value="Nuevo"
+                                     class="pfloatR"
+                                     update=":dialogoNuevoTipoObjetivo"
+                                     oncomplete="PF('dialogoNuevoTipoObjetivo').show();" 
+                                     action="#{tipoObjetivoAdministrado.limpiarTipoObjetivo()}"
+                                     title="Nuevo Medio" 
+                                     icon="ui-icon-plus">
+                        <f:setPropertyActionListener value="#{true}" target="#{tipoObjetivoAdministrado.modoEdicion}"/>
+                    </p:commandButton>
+                </p:panelGrid>
+            </p:fieldset>
+
+            <p:spacer/>
+            <p:panelGrid columns="1" columnClasses="ui-grid-col-12" layout="grid" class="pnoborder">
+                <p:dataTable id="tablaTipoObjetivo"
+                             class="tablaTipoObjetivo"
+                             widgetVar="tablaTipoObjetivo" 
+                             var="itemTipoObjetivo" 
+                             value="#{tipoObjetivoAdministrado.tipoObjetivoList}"                    
+                             rowKey="#{itemTipoObjetivo.nidTipoObjetivo}"
+                             rows="10" 
+                             paginator="true" 
+                             paginatorPosition="bottom"
+                             rowStyleClass="#{itemTipoObjetivo.flgActivo eq 0 ? 'colored' : null}"
+                             rowsPerPageTemplate="10,15,20"
+                             currentPageReportTemplate="Mostrando {startRecord}-{endRecord} de {totalRecords}"
+                             paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} 
+                             {NextPageLink} {LastPageLink} {RowsPerPageDropdown}">
+
+                    <p:ajax event="rowSelect" listener="#{tipoObjetivoAdministrado.setEntidadSeleccionada(itemTipoObjetivo)}"/>                    
+
+                    <p:column headerText="ACCIONES" width="20" class="pcenter">  
+                        <p:commandButton update=":dialogoVerTipoObjetivo :formularioPrincipal:mensajes"
+                                         oncomplete="PF('dialogoVerTipoObjetivo').show();" 
+                                         title="Ver Medio" icon="ui-icon-search" immediate="true" process="@this">
+                            <f:setPropertyActionListener value="#{false}" target="#{tipoObjetivoAdministrado.modoEdicion}"/>                            
+                            <f:setPropertyActionListener value="#{itemTipoObjetivo}" target="#{tipoObjetivoAdministrado.entidadSeleccionada}" />
+                        </p:commandButton>
+                        <p:commandButton update=":dialogoEditarTipoObjetivo :formularioPrincipal:mensajes"
+                                         oncomplete="PF('dialogoEditarTipoObjetivo').show();"
+                                         title="Editar" icon="ui-icon-pencil" immediate="true" process="@this">
+                            <f:setPropertyActionListener value="#{false}" target="#{tipoObjetivoAdministrado.modoEdicion}"/>                          
+                            <f:setPropertyActionListener value="#{itemTipoObjetivo}" target="#{tipoObjetivoAdministrado.entidadSeleccionada}"/>
+                        </p:commandButton>
+                        <p:commandButton id="commandButtonDelete" 
+                                         update="@(.tablaTipoObjetivo)" process="@this"
+                                         title="Anular" icon="ui-icon-trash" action="#{tipoObjetivoAdministrado.anularTipoObjetivo(itemTipoObjetivo)}">                  
+                            <p:confirm header="Confirmacion" message="Se anulara el elemento seleccionado, desea continuar?" icon="ui-icon-alert" />
+                        </p:commandButton>
+                    </p:column>
+
+                    <p:column headerText="ID" width="20" class="pcenter" filterMatchMode="contains" filterBy="#{itemTipoObjetivo.nidTipoObjetivo}" >
+                        <h:outputText value="#{itemTipoObjetivo.nidTipoObjetivo}" />
+                    </p:column>
+
+                    <p:column headerText="DESCRIPCION" width="120" class="pleft" filterMatchMode="contains" filterBy="#{itemTipoObjetivo.txtTipoObjetivo}" >
+                        <h:outputText value="#{itemTipoObjetivo.txtTipoObjetivo}" />
+                    </p:column>
+
+                    <p:column headerText="ESTADO" width="20" class="pcenter" filterMatchMode="contains" filterBy="#{itemTipoObjetivo.flgActivo}" >
+                        <f:facet name="filter">
+                            <p:selectOneMenu onchange="PF('tablaTipoObjetivo').filter()" >
+                                <f:selectItem itemLabel="Activo" itemValue="1" />
+                                <f:selectItem itemLabel="Inactivo" itemValue="0" />
+                            </p:selectOneMenu>
+                        </f:facet>
+                        <h:outputText value="#{itemTipoObjetivo.flgActivo != 1? 'Inactivo':'Activo'}">
+                            <f:converter converterId="javax.faces.Character" />                                    
+                        </h:outputText>
+                    </p:column>
+                </p:dataTable>
+            </p:panelGrid>
+        </h:form>
+
+        <p:dialog modal="true" id="dialogoNuevoTipoObjetivo" widgetVar="dialogoNuevoTipoObjetivo" 
+                  header="Nuevo Tipo Objetivo" closeOnEscape="true" resizable="false" width="600px" height="200px" dynamic="false">
+            <h:form>
+                <ui:include src="../panelTipoObjetivo.xhtml">
+                    <ui:param name="prefijo" value="nuevoTipoObjetivo"/>
+                </ui:include>
+                <p:spacer/>
+                <p:panelGrid columns="1" columnClasses="ui-grid-col-12" layout="grid" class="pnoborder">
+                    <p:column>
+                        <p:commandButton value="Cerrar" onclick="PF('dialogoNuevoTipoObjetivo').hide();" type="button" icon="ui-icon-cancel" title="Cierra el dialogo" class="pfloatR"/>
+                        <p:commandButton id="botonRegistrarMedio" 
+                                         class="pfloatR"
+                                         value="Inscribir" 
+                                         update=":formularioPrincipal :formularioPrincipal:mensajes"
+                                         onclick=""  title="Realiza la inscripcion" 
+                                         actionListener="#{tipoObjetivoAdministrado.crearTipoObjetivo()}"
+                                         icon="ui-icon-disk" 
+                                         process="@this"/>
+                    </p:column>
+                </p:panelGrid>
+            </h:form>
+        </p:dialog>       
+
+        <p:dialog modal="true" id="dialogoVerTipoObjetivo" widgetVar="dialogoVerTipoObjetivo" 
+                  header="Ver Tipo Objetivo" closable="true" closeOnEscape="true" resizable="false" width="600px" height="200px" dynamic="true">                  
+            <h:form>
+                <ui:include src="../panelTipoObjetivo.xhtml">
+                    <ui:param name="prefijo" value="verTipoObjetivo"/>
+                </ui:include>
+                <p:spacer/>
+                <p:panelGrid columns="1" columnClasses="ui-grid-col-12" layout="grid" class="pnoborder">
+                    <p:commandButton value="Cerrar" onclick="PF('dialogoVerTipoObjetivo').hide();" type="button" icon="ui-icon-cancel" title="Cierra el dialogo" class="pfloatR"/>
+                </p:panelGrid>
+            </h:form>    
+        </p:dialog>
+
+        <p:dialog modal="true" id="dialogoEditarTipoObjetivo" widgetVar="dialogoEditarTipoObjetivo" 
+                  header="Editar Tipo Objetivo" closable="true" closeOnEscape="true" resizable="false" width="600px" height="200px" dynamic="false" onShow="">
+            <h:form>
+                <ui:include src="../panelTipoObjetivo.xhtml">
+                    <ui:param name="prefijo" value="editarTipoObjetivo"/>
+                </ui:include>
+                <p:spacer/>
+                <p:panelGrid columns="1" columnClasses="ui-grid-col-12" layout="grid" class="pnoborder">
+                    <p:column>
+                        <p:commandButton value="Cerrar" onclick="PF('dialogoEditarTipoObjetivo').hide();" type="button" icon="ui-icon-cancel" title="Cierra el dialogo" class="pfloatR"/>
+                        <p:commandButton value="Editar" 
+                                         class="pfloatR"
+                                         update=":formularioPrincipal :formularioPrincipal:mensajes" 
+                                         onclick=""  title="Realiza la edicion" actionListener="#{tipoObjetivoAdministrado.editarTipoObjetivo(tipoObjetivoAdministrado.entidadSeleccionada)}"
+                                         icon="ui-icon-disk" 
+                                         process="@this"/>
+                    </p:column>
+                </p:panelGrid>
+            </h:form>
+        </p:dialog>
+
+    </ui:define>           
+</ui:composition>

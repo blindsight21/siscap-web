@@ -1,0 +1,44 @@
+.mybutton .ui-button-text {
+    margin-left: 6px;
+    margin-bottom: 8px;
+}
+
+/*background-color:#F0F0F0;*/
+.content-box2{
+    padding:50px 50px;
+    margin:30px 0;
+}
+
+.important{
+    color:#B93733;
+    font-weight:bold;
+    font-size:15px;
+    text-align: center;
+}
+
+.cuadro{
+    width:380px;
+    height:370px;
+    padding:15px 37px;
+    background:#F7F7F9;
+    border:#BDBDBD solid 1px;
+    margin:0 auto;
+}
+.box-full{
+    padding:0 20px;
+}   
+.bradio{
+    border-radius: 15px 15px 15px 15px;
+    -moz-border-radius: 15px 15px 15px 15px;
+    -webkit-border-radius: 15px 15px 15px 15px;
+    border: 2px solid #BDBDBD;
+}
+#clr2 {
+    clear:both;
+    padding:0;
+    margin:0;
+    width:100%;
+    height:12px;
+    font-size:0;
+    line-height:0;
+}

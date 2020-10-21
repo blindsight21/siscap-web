@@ -1,0 +1,26 @@
+//botones del reproductor de video
+/*.vjs-control.vjs-custom-button.btn-r {
+    background-image: url(#{$NombreDelSistema}/resources/plugin/videojs/reset.png);
+background-repeat: no-repeat;
+background-position: 10px;
+background-size: 18px;
+}
+.vjs-control.vjs-custom-button.btn-s {
+    background-image: url(#{$NombreDelSistema}/resources/plugin/videojs/rewind.png);
+background-repeat: no-repeat;
+background-position: 10px;
+background-size: 20px;
+}
+.vjs-control.vjs-custom-button.btn-share {
+    background-image: url(#{$NombreDelSistema}/resources/plugin/videojs/share.png);
+background-repeat: no-repeat;
+background-position: 10px;
+background-size: 20px;
+}
+.btn-r,.btn-s,.btn-share {
+    cursor: pointer;
+}*/
+//color candado
+.lock-top-1, .lock-body {
+    background-color: #ff0000 !important;
+}

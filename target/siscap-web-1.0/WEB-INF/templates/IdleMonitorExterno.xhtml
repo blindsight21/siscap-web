@@ -1,0 +1,33 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:pe="http://primefaces.org/ui/extensions"
+      xmlns:p="http://primefaces.org/ui"> 
+ 
+    <h:head>
+        <script type="text/javascript">
+            function redirigir(){
+                window.location = '/siscap-web/faces/login.xhtml';
+            }
+        </script>
+    </h:head> 
+    
+    <body>  
+        <h:form>
+            <p:idleMonitor timeout="#{parametroSiscapAdministrado.tiempoIdle()}" onidle="PF('dialgoSesion').show();PF('timer').start()" />
+        </h:form>
+        <p:dialog modal="true" id="dialgoSesion" widgetVar="dialgoSesion" header="Sesión Expirada" draggable="true" resizable="false" closable="false" closeOnEscape="false" showEffect="puff" hideEffect="puff">
+            <h:form class="pright">
+                <p:panelGrid columns="1" columnClasses="ui-grid-col-12" layout="grid" class="pnoborder pcenter">
+                    <pe:timer widgetVar="timer" autoStart="false" ontimercomplete="redirigir()" forward="false" timeout="300" format="HH:mm:ss"/>
+                    <p:outputLabel value="Su sesión ha finalizado. Se le rediccionará al login."/>
+                    <p:column>
+                        <!--<p:commandButton value="Si" onclick="location.reload();" icon="fa fa-refresh" title="Actualiza la página"/>-->
+                        <p:commandButton value="Login" action="/login?faces-redirect=true" icon="fa fa-home" title="Regresa a la página Principal"/>
+                    </p:column>
+                </p:panelGrid>
+            </h:form>
+        </p:dialog>
+    </body> 
+</html>

@@ -1,0 +1,41 @@
+<f:view contentType="text/html"
+        xmlns="http://www.w3.org/1999/xhtml"
+        xmlns:f="http://java.sun.com/jsf/core"
+        xmlns:p="http://primefaces.org/ui" >
+
+    <div class="ui-fluid">
+
+        <p:panelGrid  columns="1" columnClasses="ui-grid-col-12" layout="grid" class="boxshadowinside pnoborder">             
+            <p:panelGrid  columns="4" columnClasses="ui-grid-col-2,ui-grid-col-4,ui-grid-col-2,ui-grid-col-4" layout="grid">
+                <p:outputLabel for="funcion" value="Funcion: " />
+                <p:inputText id="funcion" converter="mayusculaConvertidor" value="#{funcionTransferidaAdministrado.entidadSeleccionada.txtFuncionTransferida}">
+                    <p:ajax event="blur" update="@this"/>
+                </p:inputText>
+
+                <p:outputLabel for="tipoFuncion" value="Tipo Funcion: " />                
+                <p:selectOneMenu id="tipoFuncion"
+                                 style="width: 100%"
+                                 value="#{funcionTransferidaAdministrado.entidadSeleccionada.nidTipoFuncion.nidTipoFuncion}">
+                    <f:selectItem itemLabel="Seleccione" itemValue="#{null}" noSelectionOption="true" />
+                    <f:selectItems value="#{funcionTransferidaAdministrado.tipoFuncionList}"
+                                   var="itemTipoFuncion"
+                                   itemValue="#{itemTipoFuncion.nidTipoFuncion}"
+                                   itemLabel="#{itemTipoFuncion.txtTipoFuncion}"/>
+                    <p:ajax update="@this"/>
+                </p:selectOneMenu>
+            </p:panelGrid>            
+            <p:panelGrid  columns="2" columnClasses="ui-grid-col-2,ui-grid-col-10" layout="grid">
+                <p:outputLabel for="descripcion" value="Descripción: " />
+                <p:inputTextarea id="descripcion" converter="mayusculaConvertidor" value="#{funcionTransferidaAdministrado.entidadSeleccionada.txtFuncionTranferidaDes}">
+                    <p:ajax event="blur" update="@this"/>
+                </p:inputTextarea>
+
+                <p:outputLabel for="editarEstado" value="Estado: " />
+                <p:selectOneMenu id="editarEstado" style="width:150px" value="#{funcionTransferidaAdministrado.entidadSeleccionada.flgActivo}">
+                    <f:selectItem itemLabel="Activo" itemValue="1" noSelectionOption="true" />
+                    <f:selectItem itemLabel="Inactivo" itemValue="0" noSelectionOption="false" />
+                </p:selectOneMenu>
+            </p:panelGrid>                        
+        </p:panelGrid> 
+    </div>
+</f:view>

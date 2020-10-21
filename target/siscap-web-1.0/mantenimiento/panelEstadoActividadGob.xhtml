@@ -1,0 +1,26 @@
+<f:view contentType="text/html"
+        xmlns="http://www.w3.org/1999/xhtml"
+        xmlns:h="http://java.sun.com/jsf/html"
+        xmlns:f="http://java.sun.com/jsf/core"
+        xmlns:p="http://primefaces.org/ui" 
+        xmlns:pe="http://primefaces.org/ui/extensions"
+        xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+        xmlns:c="http://java.sun.com/jsp/jstl/core">
+
+    <div class="ui-fluid">
+
+        <p:panelGrid  columns="1" columnClasses="ui-grid-col-12" layout="grid" class="boxshadowinside pnoborder"> 
+            <p:panelGrid  columns="2" columnClasses="ui-grid-col-2,ui-grid-col-10" layout="grid"> 
+                <p:outputLabel for="descripcion" value="Descripción: " />
+                <p:inputText id="descripcion" value="#{estadoActividadGobAdministrado.entidadSeleccionada.txtEstadoActividadGob}">
+                    <p:ajax event="blur" update="@this"/>
+                </p:inputText>
+                <p:outputLabel for="editarEstado" value="Estado: " />
+                <p:selectOneMenu id="editarEstado" style="width:150px" value="#{estadoActividadGobAdministrado.entidadSeleccionada.flgActivo}">
+                    <f:selectItem itemLabel="Activo" itemValue="1" noSelectionOption="true" />
+                    <f:selectItem itemLabel="Inactivo" itemValue="0" noSelectionOption="false" />
+                </p:selectOneMenu>
+            </p:panelGrid>                        
+        </p:panelGrid> 
+    </div>
+</f:view>

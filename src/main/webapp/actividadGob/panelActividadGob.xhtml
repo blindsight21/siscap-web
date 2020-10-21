@@ -1,0 +1,221 @@
+<f:view contentType="text/html"
+        xmlns="http://www.w3.org/1999/xhtml"
+        xmlns:f="http://java.sun.com/jsf/core"
+        xmlns:p="http://primefaces.org/ui" 
+        xmlns:h="http://java.sun.com/jsf/html"
+        xmlns:c="http://xmlns.jcp.org/jsp/jstl/core"
+        xmlns:pe="http://primefaces.org/ui/extensions">
+    <div class="ui-fluid">
+        <p:fieldset legend="Datos de la Actividad:" >
+            <p:panelGrid columns="2" columnClasses="ui-grid-col-2,ui-grid-col-10" layout="grid" class="pnoborder">
+                <p:outputLabel for="objetivo" value="Objetivo Actividad: "/>
+                <p:inputTextarea id="objetivo" value="#{actividadGobAdministrado.entidadSeleccionada.txtObjetivo}" converter="mayusculaConvertidor">
+                    <p:ajax event="blur" update="@this"/>
+                </p:inputTextarea>
+            </p:panelGrid>
+            <p:panelGrid columns="6" columnClasses="ui-grid-col-2,ui-grid-col-2,ui-grid-col-2,ui-grid-col-2,ui-grid-col-2,ui-grid-col-2" layout="grid" class="pnoborder">
+                <p:outputLabel for="tipoObjetivo" value="Tipo Objetivo: "/>
+                <p:selectOneMenu id="tipoObjetivo"
+                                 style="width: 100%"
+                                 value="#{actividadGobAdministrado.entidadSeleccionada.nidTipoObjetivo.nidTipoObjetivo}">
+                    <f:selectItem itemLabel="Seleccione" itemValue="#{null}" noSelectionOption="true"/>
+                    <f:selectItems value="#{actividadGobAdministrado.tipoObjetivoList}"
+                                   var="itemTipoObjetivo"
+                                   itemValue="#{itemTipoObjetivo.nidTipoObjetivo}"
+                                   itemLabel="#{itemTipoObjetivo.txtTipoObjetivo}"/>
+                    <p:ajax event="change" update="@this"/>
+                </p:selectOneMenu>
+
+                <p:outputLabel for="modalidadActividad" value="Modalidad Capacitacion: "/>
+                <p:selectOneMenu id="modalidadActividad"
+                                 style="width: 100%"
+                                 value="#{actividadGobAdministrado.entidadSeleccionada.nidModalidadActividad.nidModalidadActividad}">
+                    <f:selectItem itemLabel="Seleccione" itemValue="#{null}" noSelectionOption="true"/>
+                    <f:selectItems value="#{actividadGobAdministrado.modalidadActividadList}"
+                                   var="itemModalidadActividad"
+                                   itemValue="#{itemModalidadActividad.nidModalidadActividad}"
+                                   itemLabel="#{itemModalidadActividad.txtModalidadActividad}"/>
+                    <p:ajax event="change" update="@this"/>
+                </p:selectOneMenu>
+                <p:outputLabel for="tipoCapacitacion" value="Objetivo Actividad: "/>                
+                <p:selectOneMenu id="tipoCapacitacion"
+                                 style="width: 100%"
+                                 value="#{actividadGobAdministrado.entidadSeleccionada.nidTipoModalidad.nidTipoModalidad}">
+                    <f:selectItem itemLabel="Seleccione" itemValue="#{null}" noSelectionOption="true"/>
+                    <f:selectItems value="#{actividadGobAdministrado.tipoModalidadList}"
+                                   var="itemTipoModalidad"
+                                   itemValue="#{itemTipoModalidad.nidTipoModalidad}"
+                                   itemLabel="#{itemTipoModalidad.txtTipoModalidad}"/>
+                    <p:ajax event="change" update="@this"/>
+                </p:selectOneMenu>
+            </p:panelGrid>
+            <p:panelGrid columns="2" columnClasses="ui-grid-col-2,ui-grid-col-10" layout="grid" class="pnoborder">
+                <p:outputLabel for="tema" value="Tema Actividad: "/>
+                <p:inputTextarea id="tema" value="#{actividadGobAdministrado.entidadSeleccionada.txtTema}" converter="mayusculaConvertidor">
+                    <p:ajax event="blur" update="@this"/>
+                </p:inputTextarea>
+            </p:panelGrid>
+            <p:panelGrid columns="6" columnClasses="ui-grid-col-2,ui-grid-col-2,ui-grid-col-2,ui-grid-col-2,ui-grid-col-2,ui-grid-col-2" layout="grid" class="pnoborder pFechas">
+                <p:outputLabel for="fechaInicio" value="Fecha Inicio: "/>                
+                <p:calendar id="fechaInicio" value="#{actividadGobAdministrado.entidadSeleccionada.fecInicio}" pattern="dd/MM/yyyy" navigator="true" 
+                            mask="true" locale="es" yearRange="c-100:c+10" class="fecha pcenter" mindate="#{actividadGobAdministrado.generarFecha(true, false, null, null)}">
+                    <p:ajax event="dateSelect" listener="#{actividadGobAdministrado.obtenerTrimestreyAlerta(true)}" update="@(.trimestre) @(.panelAlerta) ,:formularioPrincipal:mensajes"/>
+                </p:calendar>
+                <p:outputLabel for="fechaFin" value="Fecha Final: "/>
+                <p:calendar id="fechaFin" value="#{actividadGobAdministrado.entidadSeleccionada.fecFin}" pattern="dd/MM/yyyy" navigator="true" 
+                            mask="true" locale="es" yearRange="c-100:c+10" class="fecha pcenter" mindate="#{actividadGobAdministrado.generarFecha(true, false, null, null)}">
+                    <p:ajax event="dateSelect"/>
+                </p:calendar>
+                <p:outputLabel for="trimestre" value="Trimestre: "/>
+                <p:inputText id="trimestre" value="#{actividadGobAdministrado.entidadSeleccionada.numTrimestre}" disabled="true" class="pcenter trimestre">
+                    <p:ajax event="blur" update="@this"/>
+                </p:inputText>
+            </p:panelGrid>
+        </p:fieldset>
+        <p:panelGrid columns="6" columnClasses="ui-grid-col-6,ui-grid-col-2,ui-grid-col-4" layout="grid" class="pnoborder panelAlerta">
+            <h:outputText id="alertaAct" value="#{actividadGobAdministrado.alertaActividad}" style="background-color: yellow; font-weight: bold"/>
+            <p:commandButton id="btnVerActividadGobCoincidencia"
+                             value="Ver Actividades"
+                             class="pfloatR"
+                             rendered="#{actividadGobAdministrado.alertaActividad.length() eq 0 ? false : true}"
+                             update=":idformVerActividadGobCoincidencia:tablaActividadGobCoincidencia"
+                             oncomplete="PF('dialogoVerActividadGobCoincidencia').show()"                                         
+                             title="Ver Actividades"
+                             icon="ui-icon-search">
+            </p:commandButton>
+            <h:outputText value=""/>
+        </p:panelGrid>
+        <p:fieldset legend="Datos del Gobierno:">
+            <p:panelGrid columns="6" columnClasses="ui-grid-col-2,ui-grid-col-2,ui-grid-col-2,ui-grid-col-6" layout="grid" class="pnoborder">
+                <p:outputLabel for="nivelGobierno" value="Nivel Gobierno: "/>
+                <p:selectOneMenu id="nivelGobierno"
+                                 style="width: 100%"
+                                 value="#{actividadGobAdministrado.entidadSeleccionada.nidTipoGobierno}">
+                    <f:selectItem itemLabel="Seleccione" itemValue="#{null}" noSelectionOption="true"/>
+                    <f:selectItems value="#{actividadGobAdministrado.tipoGobiernoList}"
+                                   var="itemTipoGobierno"
+                                   itemValue="#{itemTipoGobierno.nidTipoGobierno}"
+                                   itemLabel="#{itemTipoGobierno.txtTipoGobierno}"/>
+                    <p:ajax event="change" listener="#{actividadGobAdministrado.obtenerGobiernoByTipoGobierno}" update="@this @(.sedeEncuentro)"/>
+                </p:selectOneMenu>
+                <p:outputLabel for="sedeEncuentro" value="Sede Encuentro: "/>
+                <p:selectOneMenu id="sedeEncuentro" class="sedeEncuentro"
+                                 style="width: 100%"
+                                 value="#{actividadGobAdministrado.entidadSeleccionada.nidGobierno}"
+                                 converter="gobiernoConvertidor">
+                    <f:selectItem itemLabel="Seleccione" itemValue="#{null}" noSelectionOption="true"/>
+                    <f:selectItems value="#{actividadGobAdministrado.gobiernoSedeList}"
+                                   var="itemGobierno"
+                                   itemValue="#{itemGobierno}"
+                                   itemLabel="#{itemGobierno.txtGobierno}"/>
+                    <p:ajax listener="#{actividadGobAdministrado.obtenerTrimestreyAlerta(true)}" update="@this @(.panelAlerta)"/>
+                </p:selectOneMenu>
+            </p:panelGrid>
+            <p:panelGrid columns="4" columnClasses="ui-grid-col-2,ui-grid-col-4,ui-grid-col-2,ui-grid-col-4" layout="grid" class="pnoborder">
+                <p:outputLabel for="tipoFuncion" value="Tipo Funcion: "/>
+                <p:selectOneMenu id="tipoFuncion"
+                                 style="width: 100%"
+                                 value="#{actividadGobAdministrado.entidadSeleccionada.nidTipoFuncion}">
+                    <f:selectItem itemLabel="Seleccione" itemValue="#{null}" noSelectionOption="true"/>
+                    <f:selectItems value="#{actividadGobAdministrado.tipoFuncionList}"
+                                   var="itemtipoFuncion"
+                                   itemValue="#{itemtipoFuncion.nidTipoFuncion}"
+                                   itemLabel="#{itemtipoFuncion.txtTipoFuncion}"/>
+                    <p:ajax event="change" listener="#{actividadGobAdministrado.obtenerFuncionByTipoFuncion}" update="@this @(.funcionTransferida)"/>
+                </p:selectOneMenu>
+                <p:outputLabel for="funcionTransferida" value="Funcion Transferida: "/>
+                <p:selectOneMenu id="funcionTransferida" class="funcionTransferida"
+                                 style="width: 100%"
+                                 value="#{actividadGobAdministrado.entidadSeleccionada.nidFuncionTransferida}"
+                                 converter="funcionTransferidaConvertidor">
+                    <f:selectItem itemLabel="Seleccione" itemValue="#{null}" noSelectionOption="true"/>
+                    <f:selectItems value="#{actividadGobAdministrado.funcionTransferidaList}"
+                                   var="itemFuncionTransferida"
+                                   itemValue="#{itemFuncionTransferida}"
+                                   itemLabel="#{itemFuncionTransferida.txtFuncionTransferida}"/>
+                    <p:ajax update="@this"/>
+                </p:selectOneMenu>
+            </p:panelGrid>
+            <p:panelGrid columns="2" columnClasses="ui-grid-col-6,ui-grid-col-6" layout="grid" class="pTableMultiSelections"  rendered="#{actividadGobAdministrado.tipoBoton == 3 ? false : true}">
+                <p:panelGrid columns="1" columnClasses="ui-grid-col-12" layout="grid" class="pnoborder">
+                    <p:dataTable id="tablaPublicoObjetivo"
+                                 widgetVar="tablaPublicoObjetivo"
+                                 var="itemPublicoObjetivo"                                 
+                                 value="#{actividadGobAdministrado.publicoObjetivoList}"                        
+                                 rowKey="#{itemPublicoObjetivo.nidPublicoObjetivo}"
+                                 scrollHeight="130" 
+                                 scrollable="true">
+                        <p:ajax event="rowSelectCheckbox" listener="#{actividadGobAdministrado.onRowSelectPublicoObjetivo}" />
+                        <p:ajax event="rowUnselectCheckbox" listener="#{actividadGobAdministrado.onRowUnselectPublicoObjetivo}" />
+
+                        <p:column selectionMode="multiple" style="width: 16px;text-align: center" rendered="#{actividadGobAdministrado.tipoBoton == 2 ? false : true}"/>
+
+                        <p:column headerText="Publico Objetivo" filterMatchMode="contains" filterBy="#{itemPublicoObjetivo.txtPublicoObjetivo}">
+                            <h:outputText value="#{itemPublicoObjetivo.txtPublicoObjetivo}"/>
+                        </p:column>
+                    </p:dataTable>
+                </p:panelGrid>
+                <p:panelGrid columns="1" columnClasses="ui-grid-col-12" layout="grid" class="pnoborder">
+                    <p:dataTable id="tablaGobiernoProcedencia"
+                                 widgetVar="tablaGobiernoProcedencia"
+                                 var="itemGobiernoProcedencia"
+                                 value="#{actividadGobAdministrado.gobiernoPublicoList}"                                 
+                                 rowKey="#{itemGobiernoProcedencia.nidGobierno}"
+                                 scrollHeight="130" 
+                                 scrollable="true">
+                        <p:ajax event="rowSelectCheckbox" listener="#{actividadGobAdministrado.onRowSelectGobierno}" />
+                        <p:ajax event="rowUnselectCheckbox" listener="#{actividadGobAdministrado.onRowUnselectGobierno}" />
+
+                        <p:column selectionMode="multiple" style="width: 16px;text-align: center" rendered="#{actividadGobAdministrado.tipoBoton == 2 ? false : true}"/>
+
+                        <p:column headerText="Gobierno Procedencia" filterMatchMode="contains" filterBy="#{itemGobiernoProcedencia.txtGobierno}">
+                            <h:outputText value="#{itemGobiernoProcedencia.txtGobierno}"/>
+                        </p:column>
+                    </p:dataTable>
+                </p:panelGrid>
+            </p:panelGrid>
+        </p:fieldset>
+        <p:fieldset legend="Responsable de la Actividad:">
+            <p:panelGrid columns="4" columnClasses="ui-grid-col-2,ui-grid-col-4,ui-grid-col-2,ui-grid-col-4" layout="grid" class="pnoborder">
+                <p:outputLabel for="apePaterno" value="Apellido Paterno: "/>
+                <p:inputText id="apePaterno" value="#{actividadGobAdministrado.entidadSeleccionada.txtResponsableApepat}" converter="mayusculaConvertidor">
+                    <p:ajax event="blur" update="@this"/>
+                </p:inputText>
+                <p:outputLabel for="apeMaterno" value="Apellido Materno: "/>
+                <p:inputText id="apeMaterno" value="#{actividadGobAdministrado.entidadSeleccionada.txtResponsableApemat}" converter="mayusculaConvertidor">
+                    <p:ajax event="blur" update="@this"/>
+                </p:inputText>
+            </p:panelGrid>
+            <p:panelGrid columns="6" columnClasses="ui-grid-col-2,ui-grid-col-4,ui-grid-col-1,ui-grid-col-2,ui-grid-col-1,ui-grid-col-2" layout="grid" class="pnoborder">
+                <p:outputLabel for="nombres" value="Nombres: "/>
+                <p:inputText id="nombres" value="#{actividadGobAdministrado.entidadSeleccionada.txtResponsableNombre}" converter="mayusculaConvertidor">
+                    <p:ajax event="blur" update="@this"/>
+                </p:inputText>
+                <p:outputLabel for="telefono" value="Telefono: "/>
+                <p:inputText id="telefono" value="#{actividadGobAdministrado.entidadSeleccionada.txtResponsableTelef}" converter="mayusculaConvertidor">
+                    <p:ajax event="blur" update="@this"/>
+                </p:inputText>
+                <p:outputLabel for="correo" value="Correo: "/>
+                <p:inputText id="correo" value="#{actividadGobAdministrado.entidadSeleccionada.txtResponsableCorreo}" converter="mayusculaConvertidor">
+                    <p:ajax event="blur" update="@this"/>
+                </p:inputText>
+            </p:panelGrid>
+            <p:panelGrid columns="6" columnClasses="ui-grid-col-2,ui-grid-col-4,ui-grid-col-6" layout="grid" class="pnoborder" 
+                         rendered="#{usuarioAdministrado.usuarioActivoEsAdministrador(usuarioAdministrado.entidadSeleccionada) ? actividadGobAdministrado.tipoBoton eq 1 : false}">
+                <p:outputLabel for="direccion" value="Unidad Organica: "/>
+                <p:selectOneMenu id="direccion"
+                                 style="width: 100%"
+                                 value="#{areaAdministrado.entidadSeleccionada.nidArea}"
+                                 filter="true"
+                                 filterMatchMode="contains">
+                    <f:selectItem itemLabel="Seleccione" itemValue="#{null}" noSelectionOption="true"/>
+                    <f:selectItems value="#{areaAdministrado.entidades}"
+                                   var="itemDireccion"
+                                   itemValue="#{itemDireccion.nidArea}"
+                                   itemLabel="#{itemDireccion.txtArea}"/>
+                    <p:ajax event="change" update="@this"/>                                       
+                </p:selectOneMenu>
+            </p:panelGrid>
+        </p:fieldset>
+    </div>
+</f:view>

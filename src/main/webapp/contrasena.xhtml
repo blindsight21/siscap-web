@@ -1,0 +1,22 @@
+<f:view contentType="text/html"
+        xmlns="http://www.w3.org/1999/xhtml"
+        xmlns:h="http://java.sun.com/jsf/html"
+        xmlns:f="http://java.sun.com/jsf/core"
+        xmlns:p="http://primefaces.org/ui"
+        xmlns:c="http://java.sun.com/jsp/jstl/core"
+        xmlns:pe="http://primefaces.org/ui/extensions">
+
+    <p:panelGrid columns="2" columnClasses="ui-grid-col-5,ui-grid-col-7" layout="grid" class="pnoborder">
+        <h:outputLabel for="pwd1" value="Nueva Contraseña:" />
+        <p:password id="pwd1" value="#{usuarioAdministrado.nuevaContrasena}" match="pwd2" label="Nueva Contraseña" maxlength="20" feedback="true" promptLabel="Ingrese una contraseña" weakLabel="Contraseña débil" goodLabel="Contraseña buena" strongLabel="Contraseña fuerte" inline="true" required="true">
+            <f:validateLength minimum="6" />
+        </p:password>
+
+        <h:outputLabel for="pwd2" value="Repetir Contraseña:" />
+        <p:password id="pwd2" value="#{usuarioAdministrado.nuevaContrasena}" label="Repetir Contraseña" maxlength="20" required="true" >
+            <f:validateLength minimum="6" />
+        </p:password>
+    </p:panelGrid>
+
+</f:view>
+

@@ -1,0 +1,1048 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:pe="http://primefaces.org/ui/extensions"
+                xmlns:c="http://java.sun.com/jsp/jstl/core"
+                template="/WEB-INF/templates/defaultLayout.xhtml">
+
+    <ui:define name="header">       
+        <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCrjk4NoK-sPq9tWpZIUbeCdrG7ODd2WWg&amp;" type="text/javascript"></script>
+        <h:outputScript name="plugin/html2Canvas/html2canvas.js"/>
+        <script type="text/javascript">
+            <!--//--><![CDATA[//><!--
+            $(document).ready(function ()
+            {
+                initMap();
+                nacional();
+            });
+            var map;
+            var peru = {lat: -9.0825566, lng: -77.003964};
+            var geocoder;
+            var capas = [];
+            var contenidoInfoWindow;
+            var infoWindow = new google.maps.InfoWindow();
+            var codeDep;
+            var codePro;
+            var codeDis;
+            var markers = [];
+            function initMap()
+            {
+                console.info("initmap");
+                try {
+                    map = new google.maps.Map(document.getElementById('map'), {
+                        zoom: 6,
+                        center: peru,
+                        disableDefaultUI: false
+                    });
+                    geocoder = new google.maps.Geocoder();
+                } catch (err) {
+                    console.info("error:" + err.message);
+                }
+            }
+            function geocodeAddress(geocoder, resultsMap, direccion, zoom) {
+                console.info("geocodeAddress");
+                geocoder.geocode({'address': direccion}, function (results, status){
+                    if (status === google.maps.GeocoderStatus.OK) {
+                        resultsMap.setCenter(results[0].geometry.location);
+                        map.setZoom(zoom);
+                    } else {
+                        map.setCenter(peru);
+                        map.setZoom(5);
+                        limpiarCapas();
+                    }
+                });
+            }
+            function cargando() {
+                console.info("cargando");
+                $(".cargando").toggle(500);
+            }
+            function buscar() {
+                console.info("buscar");
+                $(".geoBuscador").toggle(500);
+            }
+            function center() {
+                console.info("center");
+                map.setCenter(peru);
+                map.setZoom(5);
+            }
+            function limpiarCapas() {
+                console.info("limpiarCapas");
+                for (var i = 0; i < capas.length; i++)
+                {
+                    capas[i].setMap(null);
+                }
+                capas = [];
+            }
+            function setMapOnAll(map) {
+                console.info("setMapOnAll");
+                for (var i = 0; i < markers.length; i++) {
+                    markers[i].setMap(map);
+                }
+            }
+            function clearMarkers() {
+                console.info("clearMarkers");
+                setMapOnAll(null);
+            }
+            function showMarkers() {
+                console.info("showMarkers");
+                setMapOnAll(map);
+            }
+            function deleteMarkers() {
+                console.info("deleteMarkers");
+                clearMarkers();
+                markers = [];
+            }
+
+            function crearCapa(jsonObject) {
+                console.info("crearCapa");
+                var randomColor = '#' + Math.floor(Math.random() * 16777215).toString(16);
+                var item = new google.maps.Polygon({
+                    paths: jsonObject,
+                    strokeColor: '#000000',
+                    strokeOpacity: 0.8,
+                    strokeWeight: 1,
+                    fillColor: randomColor,
+                    fillOpacity: 0.35
+                });
+                item.set("Info", contenidoInfoWindow);
+                google.maps.event.addListener(item, 'click', function (event) {
+                    infoWindow.setContent(item.get("Info"));
+                    infoWindow.setPosition(event.latLng);
+                    infoWindow.open(map);
+                });
+                capas.push(item);
+                item.setMap(map);
+            }
+
+            function cargarActividad() {
+                console.info("cargarActividad");
+                infoWindow.close();
+                var departamento = PF('departamento').getSelectedLabel();
+                var direccion = "Perú, " + departamento;
+                geocodeAddress(geocoder, map, direccion, 7);
+                $.ajax({
+                    url: '../../ActividadServlet?nombre=' + departamento,
+                    data: {nombre: departamento},
+                    type: 'POST',
+                    async: true,
+                    success: function (data)
+                    {
+                        console.info("data_actividad:" + data);
+                        if (data !== '')
+                        {
+                            var datos = JSON.parse(data);
+                            contenidoInfoWindow = '<div style="margin-bottom:5px;font-size:medium;width:350px"><strong> Departamento: ' + datos[0].departamento + ' </strong></div>' +
+                                    '<table width="350px" cellspacing="0" cellpadding="2">' +
+                                    '<tr height="25px">' + '<td style="border-bottom:1px solid #a3a3a3">' + 'Ubigeo:' + '</td>' +
+                                    '<td style="border-bottom:1px solid #a3a3a3">' + datos[0].cantidad + '</td>' + '</tr>' +
+                                    '</table>';
+                        }
+                        else
+                        {
+                            console.info("llamando a fn nacional...");
+                            //nacional();
+                        }
+                    },
+                    error: function (xhr) {
+                        console.log('CANTIDAD ACTIVIDAD : se ha producido un error');
+                    },
+                    contentType: false,
+                    processData: false
+                });
+            }
+
+            function nacional()
+            {
+                console.info("nacional");
+                infoWindow.close();
+                limpiarCapas();
+                var departamentoTemporal = #{mapaAdministrado.departamentosLista()};
+                for (var i = 0; i < departamentoTemporal.length; i++)
+                {
+                    $.ajax({
+                        url: '../../DepartamentoServlet?nombre=' + departamentoTemporal[i],
+                        data: {nombre: departamentoTemporal[i]},
+                        type: 'POST',
+                        async: true,
+                        success: function (data)
+                        {
+                            console.info("data_nacional:" + data);
+                            var datos = JSON.parse(data);
+                            contenidoInfoWindow = '<div style="margin-bottom:5px;font-size:medium;width:250px"><strong> Departamento: ' + datos[0].nombre + ' </strong></div>' +
+                                    '<table width="250px" cellspacing="0" cellpadding="2">' +
+                                    '<tr height="25px">' + '<td style="border-bottom:1px solid #a3a3a3">' + 'Ubigeo:' + '</td>' +
+                                    '<td style="border-bottom:1px solid #a3a3a3">' + datos[0].ubigeo + '</td>' + '</tr>' +
+                                    '</table>';
+                            crearCapa(datos);
+                        },
+                        error: function (xhr) {
+                            console.log('NACIONAL: se ha producido un error');
+                        },
+                        contentType: false,
+                        processData: false
+                    });
+                }
+                center();
+            }
+
+            function departamento()
+            {
+                console.info("departamento");
+                infoWindow.close();
+                var departamento = PF('departamento').getSelectedLabel();
+                var direccion = "Perú, " + departamento;
+                geocodeAddress(geocoder, map, direccion, 7);
+                $.ajax({
+                    url: '../../DepartamentoServlet?nombre=' + departamento,
+                    data: {nombre: departamento},
+                    type: 'POST',
+                    success: function (data)
+                    {
+                        console.info("data_departamento:" + data);
+                        limpiarCapas();
+
+                        if (data !== '')
+                        {
+                            var datos = JSON.parse(data);
+                            contenidoInfoWindow = '<div style="margin-bottom:5px;font-size:medium;width:350px"><strong> Departamento: ' + datos[0].nombre + ' </strong></div>' +
+                                    '<table width="350px" cellspacing="0" cellpadding="2">' +
+                                    '<tr height="25px">' + '<td style="border-bottom:1px solid #a3a3a3">' + 'Ubigeo:' + '</td>' +
+                                    '<td style="border-bottom:1px solid #a3a3a3">' + datos[0].ubigeo + '</td>' + '</tr>' +
+                                    '</table>';
+                            crearCapa(datos);
+                            cargarActividad();
+                        }
+                        else
+                        {
+                            console.info("llamando a fn nacional...");
+                            nacional();
+                        }
+                    },
+                    error: function (xhr) {
+                        console.log('DEPARTAMENTO: se ha producido un error');
+                    },
+                    contentType: false,
+                    processData: false
+                });
+            }
+
+            function provincia()
+            {
+                console.info("provincia");
+                infoWindow.close();
+                var provincia = PF('provincia').getSelectedLabel();
+                if (provincia === "Seleccione") {
+                    departamento();
+                } else {
+                    var direccion = "Perú, " + PF('departamento').getSelectedLabel() + " " + provincia;
+                    geocodeAddress(geocoder, map, direccion, 9);
+                    $.ajax({
+                        url: '../../ProvinciaServlet?nombre=' + provincia,
+                        data: {nombre: provincia},
+                        type: 'POST',
+                        success: function (data)
+                        {
+                            limpiarCapas();
+                            if (data !== '')
+                            {
+                                var datos = JSON.parse(data);
+                                contenidoInfoWindow = '<div style="margin-bottom:5px;font-size:medium;width:350px"><strong> Provincia: ' + datos[0].nombre + ' </strong></div>' +
+                                        '<table width="350px" cellspacing="0" cellpadding="2">' +
+                                        '<tr height="25px">' + '<td style="border-bottom:1px solid #a3a3a3">' + 'Ubigeo:' + '</td>' +
+                                        '<td style="border-bottom:1px solid #a3a3a3">' + datos[0].ubigeo + '</td>' + '</tr>' +
+                                        '<tr height="25px">' + '<td style="border-bottom:1px solid #a3a3a3">' + 'Departamento:' + '</td>' +
+                                        '<td style="border-bottom:1px solid #a3a3a3">' + datos[0].padre + '</td>' + '</tr>' +
+                                        '</table>';
+                                crearCapa(datos);
+                            }
+                        },
+                        error: function (xhr) {
+                            console.log('PROVINCIA: se ha producido un error');
+                        },
+                        contentType: false,
+                        processData: false
+                    });
+                }
+            }
+
+            function distrito()
+            {
+                console.info("distrito");
+                infoWindow.close();
+                var distrito = PF('distrito').getSelectedLabel();
+                if (distrito === "Seleccione") {
+                    provincia();
+                } else {
+                    var direccion = "Perú, " + PF('departamento').getSelectedLabel() + " " + PF('provincia').getSelectedLabel() + " " + distrito;
+                    $.ajax({
+                        url: '../../DistritoServlet?nombre=' + distrito,
+                        data: {nombre: distrito},
+                        type: 'POST',
+                        success: function (data)
+                        {
+                            limpiarCapas();
+                            if (data !== '')
+                            {
+                                var datos = JSON.parse(data);
+                                contenidoInfoWindow = '<div style="margin-bottom:5px;font-size:medium;width:350px"><strong> Distrito: ' + datos[0].nombre + ' </strong></div>' +
+                                        '<table width="350px" cellspacing="0" cellpadding="2">' +
+                                        '<tr height="25px">' + '<td style="border-bottom:1px solid #a3a3a3">' + 'Ubigeo:' + '</td>' +
+                                        '<td style="border-bottom:1px solid #a3a3a3">' + datos[0].ubigeo + '</td>' + '</tr>' +
+                                        '<tr height="25px">' + '<td style="border-bottom:1px solid #a3a3a3">' + 'Provincia:' + '</td>' +
+                                        '<td style="border-bottom:1px solid #a3a3a3">' + datos[0].padre + '</td>' + '</tr>' +
+                                        '<tr height="25px">' + '<td style="border-bottom:1px solid #a3a3a3">' + 'Departamento:' + '</td>' +
+                                        '<td style="border-bottom:1px solid #a3a3a3">' + datos[0].abuelo + '</td>' + '</tr>' +
+                                        '</table>';
+                                crearCapa(datos);
+                            }
+                        },
+                        error: function (xhr) {
+                            console.log('DISTRITO: se ha producido un error');
+                        },
+                        contentType: false,
+                        processData: false
+                    });
+                    var centrarCA = [$('#formularioIzquierda\\:centrarCentroAtencion').val()];
+                    if (centrarCA[0] == true) {
+                        noCentrarCentroAtencion();
+                        varX = [$('#formularioIzquierda\\:caLat').val()];
+                        varY = [$('#formularioIzquierda\\:caLng').val()];
+                        var coordenada = {lat: Number(varX[0]), lng: Number(varY[0])};
+                        map.setCenter(coordenada);
+                        map.setZoom(17);
+                        refrescarMapa();
+                    } else {
+                        geocodeAddress(geocoder, map, direccion, 11);
+                    }
+                }
+            }
+
+            function refrescarMapa() {
+                console.info("refrescarMapa");
+                google.maps.event.trigger(map, 'resize');
+            }
+
+            function descargarGrafico(id) {
+                console.info("descargarGrafico");
+                var id_ = '#' + id;
+                var parentId = $(id_).closest('div').prop('id');
+                var parentId_ = '#' + parentId;
+                html2canvas($(parentId_),
+                        {
+                            onrendered: function (canvas) {
+                                var a = document.createElement('a');
+                                a.href = canvas.toDataURL("image/jpeg").replace("image/jpeg", "image/octet-stream");
+                                a.download = 'grafico.jpg';
+                                a.click();
+                            }
+                        });
+            }
+            //--><!]]>
+        </script>
+        <style>
+            .ui-layout-unit-content {
+                background-color: white !important; 
+            }
+            .pcombos {
+                border: 1px double #cacaca;
+                border-radius: 5px;
+                margin: 8px;
+                box-sizing: border-box;
+                padding: 2px;
+            }
+            .pcombos .ui-accordion-content {
+                border: 1px double #cacaca !important;
+            }
+            .pcombos .ui-grid-col-12 {
+                padding: 0px !important;
+            }
+            .geoAccordion0 h3 > span {
+                left: initial !important;
+                right: .9em !important;
+                background-image: none !important;
+            }
+            .geoAccordion0 h3 {
+                padding-left: 8px !important;
+                border: 1px solid #cacaca !important;
+                height: 30px !important;
+                line-height: 30px !important;
+                border: 1px solid #68727B !important;
+                background: #68727B url("#{request.contextPath}/faces/javax.faces.resource/images/default.png?ln=primefaces-home") 50% 50% repeat-x !important;
+                font-weight: normal !important;
+                color: #ffffff !important;
+            }
+            .geoAccordion2 h3 > span {
+                left: initial !important;
+                right: .9em !important;
+                background-image: url("#{request.contextPath}/resources/imagen/menu-bulb-on-4.png") !important;
+                background-position: -4px -4px;
+                border-radius: 10px;
+                height: 13px;
+                width: 12px;
+                -webkit-box-shadow: 0px 0px 10px 3px rgba(255,255,255,1);
+                -moz-box-shadow: 0px 0px 10px 3px rgba(255,255,255,1);
+                box-shadow: 0px 0px 10px 3px rgba(255,255,255,1);
+            }
+            .geoAccordion2 h3 {
+                padding-left: 8px !important;
+                border: 1px solid #cacaca !important;
+                height: 30px !important;
+                line-height: 30px !important;
+
+                background: #fefefe !important;
+                background: -moz-linear-gradient(top, #fefefe 0%, #f2f2f2 47%, #e2e2e2 49%, #f2f2f2 100%) !important;
+                background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#fefefe), color-stop(47%,#f2f2f2), color-stop(49%,#e2e2e2), color-stop(100%,#f2f2f2)) !important;
+                background: -webkit-linear-gradient(top, #fefefe 0%,#f2f2f2 47%,#e2e2e2 49%,#f2f2f2 100%) !important;
+                background: -o-linear-gradient(top, #fefefe 0%,#f2f2f2 47%,#e2e2e2 49%,#f2f2f2 100%) !important;
+                background: -ms-linear-gradient(top, #fefefe 0%,#f2f2f2 47%,#e2e2e2 49%,#f2f2f2 100%) !important;
+                background: linear-gradient(to bottom, #fefefe 0%,#f2f2f2 47%,#e2e2e2 49%,#f2f2f2 100%) !important;
+                filter: progidXImageTransform.Microsoft.gradient( startColorstr='#fefefe', endColorstr='#f2f2f2',GradientType=0 ) !important;
+                color: black !important;
+            }
+            .geoAccordion3 h3 > span {
+                left: initial !important;
+                right: .9em !important;
+                background-image: url("#{request.contextPath}/resources/imagen/menu-bulb-on-2.png") !important;
+                background-position: -4px -4px;
+                border-radius: 10px;
+                height: 13px;
+                width: 12px;
+                -webkit-box-shadow: 0px 0px 10px 3px rgba(255,255,255,1);
+                -moz-box-shadow: 0px 0px 10px 3px rgba(255,255,255,1);
+                box-shadow: 0px 0px 10px 3px rgba(255,255,255,1);
+            }
+            .geoAccordion3 h3 {
+                padding-left: 8px !important;
+                border: 1px solid #cacaca !important;
+                height: 30px !important;
+                line-height: 30px !important;
+
+                background: #fefefe !important;
+                background: -moz-linear-gradient(top, #fefefe 0%, #f2f2f2 47%, #e2e2e2 49%, #f2f2f2 100%) !important;
+                background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#fefefe), color-stop(47%,#f2f2f2), color-stop(49%,#e2e2e2), color-stop(100%,#f2f2f2)) !important;
+                background: -webkit-linear-gradient(top, #fefefe 0%,#f2f2f2 47%,#e2e2e2 49%,#f2f2f2 100%) !important;
+                background: -o-linear-gradient(top, #fefefe 0%,#f2f2f2 47%,#e2e2e2 49%,#f2f2f2 100%) !important;
+                background: -ms-linear-gradient(top, #fefefe 0%,#f2f2f2 47%,#e2e2e2 49%,#f2f2f2 100%) !important;
+                background: linear-gradient(to bottom, #fefefe 0%,#f2f2f2 47%,#e2e2e2 49%,#f2f2f2 100%) !important;
+                filter: progidXImageTransform.Microsoft.gradient( startColorstr='#fefefe', endColorstr='#f2f2f2',GradientType=0 ) !important;
+                color: black !important;
+            }
+            .geoAccordion4 h3 > span {
+                left: initial !important;
+                right: .9em !important;
+                background-image: url("#{request.contextPath}/resources/imagen/menu-bulb-on.png") !important;
+                background-position: -4px -4px;
+                border-radius: 10px;
+                height: 13px;
+                width: 12px;
+                -webkit-box-shadow: 0px 0px 10px 3px rgba(255,255,255,1);
+                -moz-box-shadow: 0px 0px 10px 3px rgba(255,255,255,1);
+                box-shadow: 0px 0px 10px 3px rgba(255,255,255,1);
+            }
+            .geoAccordion4 h3 {
+                padding-left: 8px !important;
+                border: 1px solid #cacaca !important;
+                height: 30px !important;
+                line-height: 30px !important;
+
+                background: #fefefe !important;
+                background: -moz-linear-gradient(top, #fefefe 0%, #f2f2f2 47%, #e2e2e2 49%, #f2f2f2 100%) !important;
+                background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#fefefe), color-stop(47%,#f2f2f2), color-stop(49%,#e2e2e2), color-stop(100%,#f2f2f2)) !important;
+                background: -webkit-linear-gradient(top, #fefefe 0%,#f2f2f2 47%,#e2e2e2 49%,#f2f2f2 100%) !important;
+                background: -o-linear-gradient(top, #fefefe 0%,#f2f2f2 47%,#e2e2e2 49%,#f2f2f2 100%) !important;
+                background: -ms-linear-gradient(top, #fefefe 0%,#f2f2f2 47%,#e2e2e2 49%,#f2f2f2 100%) !important;
+                background: linear-gradient(to bottom, #fefefe 0%,#f2f2f2 47%,#e2e2e2 49%,#f2f2f2 100%) !important;
+                filter: progidXImageTransform.Microsoft.gradient( startColorstr='#fefefe', endColorstr='#f2f2f2',GradientType=0 ) !important;
+                color: black !important;
+            }
+            .geoBotones {
+                left: 50%;
+                margin-left: -130px;
+                position: absolute;
+                top: 10px;
+                text-align: center;
+            }
+            .geoBotonesFondo{
+                cursor: pointer;
+                background-color: #f5f5f5;
+                background-image: -moz-linear-gradient(top, #ffffff, #e6e6e6);
+                background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#ffffff), to(#e6e6e6));
+                background-image: -webkit-linear-gradient(top, #ffffff, #e6e6e6);
+                background-image: -o-linear-gradient(top, #ffffff, #e6e6e6);
+                background-image: linear-gradient(to bottom, #ffffff, #e6e6e6);
+                -webkit-border-radius: 4px;
+                -moz-border-radius: 4px;
+                border-radius: 4px;
+                filter: progidXImageTransform.Microsoft.gradient(startColorstr='#ffffffff', endColorstr='#ffe6e6e6', GradientType=0);
+                filter: progidXImageTransform.Microsoft.gradient(enabled=false);
+                -webkit-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
+                -moz-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
+                box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
+            }
+            .geoBotones > div {
+                float: left;
+            }
+            .geoSlider {
+                box-sizing: border-box;
+                position: absolute;
+                bottom: 0px;
+                width: 100%;
+                overflow-x: scroll;
+                overflow-y: hidden;
+                border-radius: 0px;
+                background-color: white;
+            }
+            .geoSlider > div {
+                padding-top: 10px;
+            }
+            .geoSliderTitulo {
+                position: fixed;
+                margin-top: -44px;
+            }
+            .ui-steps .ui-steps-item {
+                width: 80px;
+            }
+            .geoSteps .ui-state-highlight {
+                border: 1px solid #68727B !important;
+            }
+            .geoSteps .ui-state-highlight span{
+                border: 1px solid #a90329 !important;/*reemplazar por auxiliar*/
+                -webkit-box-shadow: 0px 0px 8px #b00b1e !important;/*reemplazar por auxiliar*/
+                -moz-box-shadow: 0px 0px 8px #b00b1e !important;/*reemplazar por auxiliar*/
+                box-shadow: 0px 0px 8px #b00b1e !important;/*reemplazar por auxiliar*/
+                background: #a90329;/*reemplazar por auxiliar*/
+                background-image: -o-linear-gradient(right top, #a90329, #8f0222);/*reemplazar por auxiliar*/
+                background-image: -ms-linear-gradient(right top, #a90329, #8f0222);/*reemplazar por auxiliar*/
+                background-image: -webkit-gradient(linear, left top, left bottom, from(#a90329), to(#8f0222));/*reemplazar por auxiliar*/
+                background: -moz-linear-gradient(top,  #a90329 0%, #8f0222 44%) !important;/*reemplazar por auxiliar*/
+                background: linear-gradient(to bottom,  #a90329 0%,#8f0222 44%) !important;/*reemplazar por auxiliar*/
+                background: -webkit-linear-gradient(top,  #a90329 0%,#8f0222 44%) !important;/*reemplazar por auxiliar*/
+                color:white !important;
+            }
+            .ui-steps.geoSteps {
+                margin-bottom: 14px;
+                margin-top: 4px;
+            }
+            .ui-steps.geoSteps .ui-steps-item .ui-menuitem-link {
+                height: 2px;
+                padding: 0 1em;
+                position: absolute;
+                margin-top: -12px;
+            }
+            .ui-steps.geoSteps .ui-steps-item .ui-steps-number {
+                background-color: #0081c2;
+                color: #FFFFFF;
+                display: inline-block;
+                width: 30px;
+                margin-top: -10px;
+                margin-bottom: 10px;
+            }
+            .ui-steps.geoSteps .ui-steps-title {
+                color: #000;
+                background-color: white;
+                padding: 4px;
+                border-radius: 8px;
+                background-color: white;
+                -webkit-box-shadow: 1px 1px 5px 0px rgba(0,0,0,0.75);
+                -moz-box-shadow: 1px 1px 5px 0px rgba(0,0,0,0.75);
+                box-shadow: 1px 1px 5px 0px rgba(0,0,0,0.75);
+            }
+            .ui-steps.geoSteps .ui-steps-number {
+                display: none !important;
+            }
+            .ui-steps.geoSteps .ui-steps-item {
+                border-radius: 0px !important;
+            }
+            .ui-steps.geoSteps .ui-state-disabled {
+                opacity: 1 !important;
+            }
+
+            .ui-steps.geoSteps ul {
+                white-space: nowrap !important;
+                /*overflow: auto !important;*/
+            }
+            .ui-steps.geoSteps li {
+                display: inline-block !important;
+            }
+            .ui-steps.geoSteps .ui-steps-item {
+                float: none !important;
+            }
+            .geoSteps2 .ui-state-highlight {
+                border: 1px solid #68727B !important;
+            }
+            .geoSteps2 .ui-state-highlight span{
+                border: 1px solid #a90329 !important;/*reemplazar por auxiliar*/
+                -webkit-box-shadow: 0px 0px 8px #b00b1e !important;/*reemplazar por auxiliar*/
+                -moz-box-shadow: 0px 0px 8px #b00b1e !important;/*reemplazar por auxiliar*/
+                box-shadow: 0px 0px 8px #b00b1e !important;/*reemplazar por auxiliar*/
+                background: #a90329;/*reemplazar por auxiliar*/
+                background-image: -o-linear-gradient(right top, #a90329, #8f0222);/*reemplazar por auxiliar*/
+                background-image: -ms-linear-gradient(right top, #a90329, #8f0222);/*reemplazar por auxiliar*/
+                background-image: -webkit-gradient(linear, left top, left bottom, from(#a90329), to(#8f0222));/*reemplazar por auxiliar*/
+                background: -moz-linear-gradient(top,  #a90329 0%, #8f0222 44%) !important;/*reemplazar por auxiliar*/
+                background: linear-gradient(to bottom,  #a90329 0%,#8f0222 44%) !important;/*reemplazar por auxiliar*/
+                background: -webkit-linear-gradient(top,  #a90329 0%,#8f0222 44%) !important;/*reemplazar por auxiliar*/
+                color:white !important;
+            }
+            .ui-steps.geoSteps2 {
+                margin-bottom: 14px;
+                margin-top: 4px;
+            }
+            .ui-steps.geoSteps2 .ui-steps-item .ui-menuitem-link {
+                height: 2px;
+                padding: 0 1em;
+                position: absolute;
+                margin-top: -12px;
+            }
+            .ui-steps.geoSteps2 .ui-steps-item .ui-steps-number {
+                background-color: #0081c2;
+                color: #FFFFFF;
+                display: inline-block;
+                width: 30px;
+                margin-top: -10px;
+                margin-bottom: 10px;
+            }
+            .ui-steps.geoSteps2 .ui-steps-title {
+                color: white;
+                background: #68727B url("#{request.contextPath}/faces/javax.faces.resource/images/default.png?ln=primefaces-home") 50% 50% repeat-x;
+                padding: 4px;
+                border-radius: 8px;
+                background-color: white;
+                -webkit-box-shadow: 1px 1px 5px 0px rgba(0,0,0,0.75);
+                -moz-box-shadow: 1px 1px 5px 0px rgba(0,0,0,0.75);
+                box-shadow: 1px 1px 5px 0px rgba(0,0,0,0.75);
+            }
+            .ui-steps.geoSteps2 .ui-steps-number {
+                display: none !important;
+            }
+            .ui-steps.geoSteps2 .ui-steps-item {
+                border-radius: 0px !important;
+            }
+            .ui-steps.geoSteps2 .ui-state-disabled {
+                opacity: 1 !important;
+            }
+
+            .ui-steps.geoSteps2 ul {
+                white-space: nowrap !important;
+                /*overflow: auto !important;*/
+            }
+            .ui-steps.geoSteps2 li {
+                display: inline-block !important;
+            }
+            .ui-steps.geoSteps2 .ui-steps-item {
+                float: none !important;
+            }
+            .geoBuscar{
+                background-image: url(#{request.contextPath}/resources/imagen/lupa.png);
+                background-repeat: no-repeat;
+                width: 50px;
+                height: 35px;
+                background-position: 10px;
+                border: 1px solid #cccccc;
+                background-size: 56%;
+            }
+            .geoReiniciar {
+                background-image: url(#{request.contextPath}/resources/imagen/globe.png);
+                background-repeat: no-repeat;
+                width: 50px;
+                height: 35px;
+                background-position: 10px;
+                border: 1px solid #cccccc;
+            }
+            .geoAcercar {
+                background-image: url(#{request.contextPath}/resources/imagen/zoomin.png);
+                background-repeat: no-repeat;
+                width: 50px;
+                height: 35px;
+                background-position: 10px;
+                border: 1px solid #cccccc;
+            }
+            .geoAlejar {
+                background-image: url(#{request.contextPath}/resources/imagen/zoomout.png);
+                background-repeat: no-repeat;
+                width: 50px;
+                height: 35px;
+                background-position: 10px;
+                border: 1px solid #cccccc;
+            }
+            .geoImprimir {
+                background-image: url(#{request.contextPath}/resources/imagen/print.png);
+                background-repeat: no-repeat;
+                width: 50px;
+                height: 35px;
+                background-position: 10px;
+                border: 1px solid #cccccc;
+            }
+            .geoHistorico {
+                background-image: url(#{request.contextPath}/resources/imagen/info.png);
+                background-repeat: no-repeat;
+                width: 50px;
+                height: 35px;
+                background-position: 10px;
+                border: 1px solid #cccccc;
+            }
+            .geoleyendaIndicadores {
+                background-image: url(#{request.contextPath}/resources/imagen/chart.png);
+                background-repeat: no-repeat;
+                width: 50px;
+                height: 35px;
+                background-position: 10px;
+                border: 1px solid #cccccc;
+            }
+            @media print {
+                body * {
+                    visibility: hidden;
+                }
+                #derecha * {
+                    visibility: visible;
+                }
+                .geoBotones {
+                    display: none !important;
+                }
+                #derecha {
+                    position: absolute;
+                    left: 0;
+                    top: 0;
+                }
+            }
+            .geoCombosTitulo {
+                background-color: #999999;
+                color: white;
+                border-radius: 6px;
+                padding: 4px;
+                font-size: 10px !important;
+            }
+            .pgeoCombosContenedor > div {
+                background-color: white;
+                padding: 10px;
+                border-radius: 10px;
+            }
+            .ui-accordion-content {
+                padding: 8px !important;
+            }
+
+            :ebkit-scrollbar {
+                width: 12px;
+            }
+            :ebkit-scrollbar-track {
+                -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+                border-radius: 10px;
+            }
+            :ebkit-scrollbar-thumb {
+                border-radius: 10px;
+                -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.5);
+            }
+            // CUSTOM STEPS MODO TABS
+            .ui-steps.customStepsTabView li {
+                margin-right: 2px !important;
+                margin-left: 2px !important;
+                border-bottom: none !important;
+                border-bottom-left-radius: 0px !important;
+                border-bottom-right-radius: 0px !important;
+                border-left: 1px solid #bebebe !important;
+                border-top: 1px solid #bebebe !important;
+                border-right: 1px solid #bebebe !important;
+            }
+            .ui-steps.customStepsTabView .ui-state-highlight {
+                background: #ffffff !important;   
+            }
+            .ui-steps.customStepsTabView .ui-state-default {
+                border: none !important;
+                background: #d8d8d8 !important;
+                opacity: 1 !important;
+            }
+            .ui-steps.customStepsTabView .ui-state-default:hover {
+                -webkit-transition: all .5s;
+                -moz-transition: all .5s;
+                -o-transition: all .5s;
+                transition: all .5s;
+                background: #bfbfbf !important;
+                opacity: 1 !important;
+            }
+            .ui-steps.customStepsTabView .ui-state-default .ui-steps-title {
+                color: #456fae !important;
+                font-size: 11px !important;
+                font-weight: bold !important;
+            }
+            .ui-steps.customStepsTabView .ui-steps-title {
+                margin-left: auto !important;
+                padding-right: 20px !important;
+            }
+            .ui-steps.customStepsTabView .ui-steps-item {
+                width: auto !important;
+                border-bottom-left-radius: 4px !important;
+                border-bottom-right-radius: 4px !important;
+                background-color: #f4f4f4 !important;
+            }
+            .ui-steps.customStepsTabView .iconoColor1 .ui-steps-number {
+                display: inline-block !important;
+                background-image: url(#{request.contextPath}/resources/imagen/menu-bulb-on-4.png) !important;
+                width: 20px;
+                height: 20px;
+                float: right;
+                text-indent: -9999px;
+                white-space: nowrap;
+                margin-left: 2px;
+                margin-top: -2px;
+            }
+            .ui-steps.customStepsTabView .iconoColor2 .ui-steps-number {
+                display: inline-block !important;
+                background-image: url(#{request.contextPath}/resources/imagen/menu-bulb-on-2.png) !important;
+                width: 20px;
+                height: 20px;
+                float: right;
+                text-indent: -9999px;
+                white-space: nowrap;
+                margin-left: 2px;
+                margin-top: -2px;
+            }
+            .ui-steps.customStepsTabView .iconoColor3 .ui-steps-number {
+                display: inline-block !important;
+                background-image: url(#{request.contextPath}/resources/imagen/menu-bulb-on.png) !important;
+                width: 20px;
+                height: 20px;
+                float: right;
+                text-indent: -9999px;
+                white-space: nowrap;
+                margin-left: 2px;
+                margin-top: -2px;
+            }
+            .ui-steps.customStepsTabView li a {
+                padding: 6px !important;
+            }
+            .ui-steps.customStepsTabView li {
+                margin-top: 2px !important;
+            }
+            .ui-steps.customStepsTabView li.ui-state-highlight {
+                height: 24px !important;
+                background-color: white !important;
+            }
+            /*.pwhite div {
+                background-color: white !important;
+            }*/
+            .geoBuscador {
+                z-index: 5000;
+                position: absolute;
+                top: 0;
+                width: 250px;
+                padding: 0px;
+                border-radius: 5px !important;
+                box-sizing: border-box;
+                background-color: white;
+                box-shadow: 2px 2px 5px rgba(0,0,0,.3);
+                max-height: 350px;
+                left: 0;
+                margin-left: 10px;
+                margin-top: 60px;
+                overflow: auto;
+            }
+            .geoBuscador div {
+                background-color: white !important;
+                border: 0 !important;
+            }
+            .geoBuscador > div {
+                border-radius: 5px !important;
+            }
+            .geoBuscadorTitulo {
+                text-align: center;
+                margin: 5%;
+                width: 90%;
+                margin: 0 auto;
+                box-shadow: 0 4px 5px -4px rgba(0, 0, 0, 0.5);
+                font-weight: bold;
+                font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+                line-height: 20px;
+                font-size: 12px;
+                margin-bottom: 10px;
+            }
+            .geoServicios {
+                z-index: 5000;
+                position: absolute;
+                top: 0;
+                width: 250px;
+                padding: 0px;
+                border-radius: 5px !important;
+                box-sizing: border-box;
+                background-color: white;
+                box-shadow: 2px 2px 5px rgba(0,0,0,.3);
+                max-height: 350px;
+                right: 0;
+                margin-right: 10px;
+                margin-top: 60px;
+                overflow: auto;
+            }
+            .geoServicios div {
+                background-color: white !important;
+                border: 0 !important;
+            }
+            .geoServicios > div {
+                border-radius: 5px !important;
+            }
+            .geoServiciosTitulo {
+                text-align: center;
+                margin: 5%;
+                width: 90%;
+                margin: 0 auto;
+                box-shadow: 0 4px 5px -4px rgba(0, 0, 0, 0.5);
+                font-weight: bold;
+                font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+                line-height: 20px;
+                font-size: 12px;
+                margin-bottom: 10px;
+            }
+            #derecha .ui-layout-unit-content {
+                overflow: hidden !important;
+            }
+            .tablaServicios thead {
+                visibility: collapse;
+            }
+            .tablaServicios td {
+                border: 0 !important;
+            }
+            .ui-dialog-content {
+                background-color:white !important;
+            }
+            #googleInput {
+                margin-top: 50px;
+                margin-left: 10px;
+                width: 200px !important;
+                padding: 10px;
+                border-radius: 4px;
+            }
+            .cargando {
+                padding: 2px;
+                z-index: 200;
+                bottom: 0;
+                margin-bottom: 60px;
+                position: absolute;
+            }
+            th .ui-chkbox {
+                display: none !important;
+            }
+            .indicadores h3 {
+                background: #68727B !important;
+            }
+            .ui-paginator.ui-paginator-bottom{
+                background-color: #68727B !important;
+                height:24px !important;
+            }
+            .ui-separator {
+                padding: 0px !important;
+                margin: 0px !important;
+            }
+            .ui-autocomplete-panel {
+                max-width: 505px !important;
+            }
+            /*.ui-datatable-header.ui-widget-header {
+                background-color: #68727B !important;
+            }*/
+            .pchart {
+                box-sizing: border-box !important;
+                padding: 5px !important;
+                overflow-x: auto;
+                background-color: white;
+            }
+            .pchart > div {
+                background-color: white;
+            }
+            .leyendaIndicadores {
+                right: initial !important;
+                left: 10px !important;
+                width: 250px !important;
+                max-height: 350px !important;
+            }
+            .reporte tbody {
+                text-align: right;
+            }
+            .reporte tbody td:first-child {
+                text-align: left !important;
+            }
+            #reporteador .ui-grid-col-12 {
+                background-color: white !important;
+            }
+            .ui-panel-titlebar {
+                border: 1px solid #cacaca !important;
+                background: #fefefe !important;
+                background: -moz-linear-gradient(top, #fefefe 0%, #f2f2f2 47%, #e2e2e2 49%, #f2f2f2 100%) !important;
+                background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#fefefe), color-stop(47%,#f2f2f2), color-stop(49%,#e2e2e2), color-stop(100%,#f2f2f2)) !important;
+                background: -webkit-linear-gradient(top, #fefefe 0%,#f2f2f2 47%,#e2e2e2 49%,#f2f2f2 100%) !important;
+                background: -o-linear-gradient(top, #fefefe 0%,#f2f2f2 47%,#e2e2e2 49%,#f2f2f2 100%) !important;
+                background: -ms-linear-gradient(top, #fefefe 0%,#f2f2f2 47%,#e2e2e2 49%,#f2f2f2 100%) !important;
+                background: linear-gradient(to bottom, #fefefe 0%,#f2f2f2 47%,#e2e2e2 49%,#f2f2f2 100%) !important;
+                filter: progidXImageTransform.Microsoft.gradient( startColorstr='#fefefe', endColorstr='#f2f2f2',GradientType=0 ) !important;
+                color: black !important;
+            }
+            .descargar:hover {text-decoration: underline;}
+        </style>
+    </ui:define>
+
+    <ui:define name="izquierda" >
+        <p:layoutUnit position="west" size="10%" resizable="true" collapsible="false" effect="drop" minSize="220">
+            <h:form id="formularioIzquierda">                
+                <p:panelGrid columns="1" columnClasses="ui-grid-col-12" layout="grid" class="pborder">
+                    <p:commandButton value="Nacional" onclick="location.reload()" process="@this" style="width: 100%;margin-bottom: 10px" update="@(.consultaActividad)" action="#{mapaAdministrado.limpiarCombos(0, 0, 0)}"/>
+                    <p:panelGrid columns="1" columnClasses="ui-grid-col-12" layout="grid" class="pgeoCombosContenedor" style="height: 665px">                                
+                        <p:outputLabel value="Departamento:" class="geoCombosTitulo"/>
+                        <div style="height: 8px"></div>
+                        <p:selectOneMenu class="departamento" widgetVar="departamento" converter="departamentoConvertidor" value="#{departamentoAdministrado.entidadSeleccionada}"
+                                         style="width: 100%">
+                            <f:selectItem itemLabel="Seleccione" itemValue="#{null}" noSelectionOption="true"/>
+                            <f:selectItems value="#{departamentoAdministrado.obtenerTodos()}" var="departamento"
+                                           itemLabel="#{departamento.txtDescripcion}" itemValue="#{departamento}"/>
+                            <p:ajax event="change" listener="#{mapaAdministrado.limpiarCombos(1, 0, 0)}" update="@this @(.provincia) @(.consultaActividad)" oncomplete="departamento()"/>
+                        </p:selectOneMenu>                        
+                    </p:panelGrid>
+                </p:panelGrid>
+            </h:form>
+        </p:layoutUnit>
+    </ui:define>
+
+    <ui:define name="content">
+        <p:growl id="mensajes" widgetVar="mensajes" showDetail="true" life="#{parametroGeomimpAdministrado.tiempoAlertas()}" autoUpdate="false"/>
+        <h:form id="reporteador">            
+            <p:panelGrid columns="1" columnClasses="ui-grid-col-12" layout="grid" class="consultaActividad">                
+                <p:dataTable id="tablaConsultaActividad"
+                             class="tablaConsultaActividad"
+                             widgetVar="tablaConsultaActividad"
+                             var="itemConsultaActividad"
+                             value="#{departamentoAdministrado.entidadSeleccionada.nidDepartamento == null ? vwActividadAdministrado.getEntidadConsulta() : vwActividadAdministrado.obtenerActividadesDepartamento(departamentoAdministrado.entidadSeleccionada.nidDepartamento)}"
+                             rows="5"
+                             paginator="true"
+                             paginatorPosition="bottom"
+                             rowStyleClass=""
+                             rowsPerPageTemplate="10,15,20"
+                             currentPageReportTemplate="Mostrando {startRecord}-{endRecord} de {totalRecords}"
+                             paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}">
+
+                    <f:facet name="header">
+                        ACTIVIDADES
+                    </f:facet>
+
+                    <p:column headerText="TEMA PROGRAMADA" width="120%">
+                        <p:outputLabel value="#{itemConsultaActividad.txtTema}"/>
+                    </p:column>
+                    <p:column headerText="SEDE ENCUENTRO" width="100%">
+                        <p:outputLabel value="#{gobiernoAdministrado.obtenerGobiernoporId(itemConsultaActividad.nidGobierno)}"/>
+                    </p:column>
+                    <p:column headerText="FECHA INICIO" width="40%" class="pcenter">
+                        <p:outputLabel value="#{itemConsultaActividad.fecInicio}">
+                            <f:convertDateTime pattern="dd/MM/yyyy"/>
+                        </p:outputLabel>
+                    </p:column>
+                    <p:column headerText="FECHA FIN" width="40%" class="pcenter">
+                        <p:outputLabel value="#{itemConsultaActividad.fecFin}">
+                            <f:convertDateTime pattern="dd/MM/yyyy"/>
+                        </p:outputLabel>
+                    </p:column>
+                </p:dataTable>
+            </p:panelGrid>
+        </h:form>
+    </ui:define>
+    <ui:define name="derecha" >
+        <p:layoutUnit position="east" size="42%" header="" resizable="true" collapsible="false" effect="drop" minSize="250" id="derecha">
+            <div id="map" class="map" style="width: 100% ;height: 100%"></div>                        
+        </p:layoutUnit>         
+    </ui:define>
+</ui:composition>

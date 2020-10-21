@@ -1,0 +1,167 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:f="http://java.sun.com/jsf/core"
+                template="/WEB-INF/templates/default.xhtml">
+    <ui:define name="header">
+
+    </ui:define>
+    <ui:define name="content" >
+        <div class="pcenter">
+            <p:outputLabel value="Tipo de Funcion" class="ptextGradient pred pbold ptitle"/>
+        </div>
+        <p:spacer/>
+
+        <script type="text/javascript">
+            function start() {
+                PF('statusDialog').show();
+            }
+
+            function stop() {
+                PF('statusDialog').hide();
+            }
+        </script>
+
+        <h:form id="formularioPrincipal">
+            <p:growl id="mensajes" showDetail="true" life="#{parametroSiscapAdministrado.tiempoAlertas()}"/>   
+
+            <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+                <p:commandButton value="Si" styleClass="ui-confirmdialog-yes" icon="ui-icon-check"/>
+                <p:commandButton value="No" styleClass="ui-confirmdialog-no" icon="ui-icon-close" />
+            </p:confirmDialog>
+
+            <p:fieldset legend="Filtros/Opciones:" >
+                <p:panelGrid columns="1" columnClasses="ui-grid-col-12" layout="grid" class="pnoborder">
+                    <p:commandButton value="Nuevo"
+                                     class="pfloatR"
+                                     update="@(.dialogoNuevoTipoFuncion)"
+                                     oncomplete="PF('dialogoNuevoTipoFuncion').show();" 
+                                     action="#{tipoFuncionAdministrado.limpiarTipoFuncion()}"
+                                     title="Nuevo Tipo Funcion" 
+                                     icon="ui-icon-plus">
+                        <f:setPropertyActionListener value="#{true}" target="#{tipoFuncionAdministrado.modoEdicion}"/>
+                    </p:commandButton>
+                </p:panelGrid>
+            </p:fieldset>
+
+            <p:spacer/>
+            <p:panelGrid columns="1" columnClasses="ui-grid-col-12" layout="grid" class="pnoborder">
+                <p:dataTable id="tablaTipoFuncion"
+                             class="tablaTipoFuncion"
+                             widgetVar="tablaTipoFuncion" 
+                             var="itemTipoFuncion" 
+                             value="#{tipoFuncionAdministrado.tipoFuncionList}"                     
+                             rowKey="#{itemTipoFuncion.nidTipoFuncion}"
+                             rows="10" 
+                             paginator="true" 
+                             paginatorPosition="bottom"
+                             rowStyleClass="#{itemTipoFuncion.flgActivo eq 0 ? 'colored' : null}"
+                             rowsPerPageTemplate="10,15,20"
+                             currentPageReportTemplate="Mostrando {startRecord}-{endRecord} de {totalRecords}"
+                             paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} 
+                             {NextPageLink} {LastPageLink} {RowsPerPageDropdown}">
+
+                    <p:ajax event="rowSelect" listener="#{tipoFuncionAdministrado.setEntidadSeleccionada(itemTipoFuncion)}"/>                    
+
+                    <p:column headerText="ACCIONES" width="20" class="pcenter">  
+                        <p:commandButton update="@(.dialogoVerTipoFuncion)"
+                                         oncomplete="PF('dialogoVerTipoFuncion').show();" 
+                                         title="Ver Tipo Funcion" icon="ui-icon-search" immediate="true" process="@this">
+                            <f:setPropertyActionListener value="#{false}" target="#{tipoFuncionAdministrado.modoEdicion}"/>                            
+                            <f:setPropertyActionListener value="#{itemTipoFuncion}" target="#{tipoFuncionAdministrado.entidadSeleccionada}" />
+                        </p:commandButton>
+                        <p:commandButton update="@(.dialogoEditarTipoFuncion)"
+                                         oncomplete="PF('dialogoEditarTipoFuncion').show();"
+                                         title="Editar" icon="ui-icon-pencil" immediate="true" process="@this">
+                            <f:setPropertyActionListener value="#{false}" target="#{tipoFuncionAdministrado.modoEdicion}"/>                          
+                            <f:setPropertyActionListener value="#{itemTipoFuncion}" target="#{tipoFuncionAdministrado.entidadSeleccionada}"/>
+                        </p:commandButton>
+                        <p:commandButton id="commandButtonDelete" 
+                                         update="@(.tablaTipoFuncion)" process="@this"
+                                         title="Anular" icon="ui-icon-trash" action="#{tipoFuncionAdministrado.anularTipoFuncion(itemTipoFuncion)}">                  
+                            <p:confirm header="Confirmacion" message="Se anulara el elemento seleccionado, desea continuar?" icon="ui-icon-alert" />
+                        </p:commandButton>
+                    </p:column>
+
+                    <p:column headerText="ID" width="20" class="pcenter" filterMatchMode="contains" filterBy="#{itemTipoFuncion.nidTipoFuncion}" >
+                        <h:outputText value="#{itemTipoFuncion.nidTipoFuncion}" />
+                    </p:column>
+
+                    <p:column headerText="DESCRIPCION" width="120" class="pleft" filterMatchMode="contains" filterBy="#{itemTipoFuncion.txtTipoFuncion}" >
+                        <h:outputText value="#{itemTipoFuncion.txtTipoFuncion}" />
+                    </p:column>
+
+                    <p:column headerText="ESTADO" width="20" class="pcenter" filterMatchMode="contains" filterBy="#{itemTipoFuncion.flgActivo}" >
+                        <f:facet name="filter">
+                            <p:selectOneMenu onchange="PF('tablaTipoFuncion').filter()" >
+                                <f:selectItem itemLabel="Activo" itemValue="1" />
+                                <f:selectItem itemLabel="Inactivo" itemValue="0" />
+                            </p:selectOneMenu>
+                        </f:facet>
+                        <h:outputText value="#{itemTipoFuncion.flgActivo != 1? 'Inactivo':'Activo'}">
+                            <f:converter converterId="javax.faces.Character" />                                    
+                        </h:outputText>
+                    </p:column>
+                </p:dataTable>
+            </p:panelGrid>
+        </h:form>
+
+        <p:dialog modal="true" id="dialogoNuevoTipoFuncion" widgetVar="dialogoNuevoTipoFuncion" class="dialogoNuevoTipoFuncion"
+                  header="Nuevo Tipo Funcion" closeOnEscape="true" resizable="false" width="600px" height="200px" dynamic="false">
+            <h:form>
+                <ui:include src="../panelTipoFuncion.xhtml">
+                    <ui:param name="prefijo" value="nuevoTipoFuncion"/>
+                </ui:include>
+                <p:spacer/>
+                <p:panelGrid columns="1" columnClasses="ui-grid-col-12" layout="grid" class="pnoborder">
+                    <p:column>
+                        <p:commandButton value="Cerrar" onclick="PF('dialogoNuevoTipoFuncion').hide();" type="button" icon="ui-icon-cancel" title="Cierra el dialogo" class="pfloatR"/>
+                        <p:commandButton id="botonRegistrarTipoFuncion" 
+                                         class="pfloatR"
+                                         value="Inscribir" 
+                                         update="@(.dialogoNuevoTipoFuncion) @(.tablaTipoFuncion)"
+                                         onclick=""  title="Realiza la inscripcion" 
+                                         actionListener="#{tipoFuncionAdministrado.crearTipoFuncion()}"
+                                         icon="ui-icon-disk" 
+                                         process="@this"/>
+                    </p:column>
+                </p:panelGrid>
+            </h:form>
+        </p:dialog>       
+
+        <p:dialog modal="true" id="dialogoVerTipoFuncion" widgetVar="dialogoVerTipoFuncion" class="dialogoVerTipoFuncion"
+                  header="Ver Tipo Funcion" closable="true" closeOnEscape="true" resizable="false" width="600px" height="200px" dynamic="true">                  
+            <h:form>
+                <ui:include src="../panelTipoFuncion.xhtml">
+                    <ui:param name="prefijo" value="verTipoFuncion"/>
+                </ui:include>
+                <p:spacer/>
+                <p:panelGrid columns="1" columnClasses="ui-grid-col-12" layout="grid" class="pnoborder">
+                    <p:commandButton value="Cerrar" onclick="PF('dialogoVerTipoFuncion').hide();" type="button" icon="ui-icon-cancel" title="Cierra el dialogo" class="pfloatR"/>
+                </p:panelGrid>
+            </h:form>    
+        </p:dialog>
+
+        <p:dialog modal="true" id="dialogoEditarTipoFuncion" widgetVar="dialogoEditarTipoFuncion" class="dialogoEditarTipoFuncion"
+                  header="Editar Tipo Funcion" closable="true" closeOnEscape="true" resizable="false" width="600px" height="200px" dynamic="false" onShow="">
+            <h:form>
+                <ui:include src="../panelTipoFuncion.xhtml">
+                    <ui:param name="prefijo" value="editarTipoFuncion"/>
+                </ui:include>
+                <p:spacer/>
+                <p:panelGrid columns="1" columnClasses="ui-grid-col-12" layout="grid" class="pnoborder">
+                    <p:column>
+                        <p:commandButton value="Cerrar" onclick="PF('dialogoEditarTipoFuncion').hide();" type="button" icon="ui-icon-cancel" title="Cierra el dialogo" class="pfloatR"/>
+                        <p:commandButton value="Editar" 
+                                         class="pfloatR"
+                                         update="@(.dialogoEditarTipoFuncion) @(.tablaTipoFuncion)" 
+                                         onclick=""  title="Realiza la edicion" actionListener="#{tipoFuncionAdministrado.editarTipoFuncion(tipoFuncionAdministrado.entidadSeleccionada)}"
+                                         icon="ui-icon-disk" 
+                                         process="@this"/>
+                    </p:column>
+                </p:panelGrid>
+            </h:form>
+        </p:dialog>        
+    </ui:define>           
+</ui:composition>

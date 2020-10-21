@@ -1,0 +1,52 @@
+.logosistema1{
+    display: inline-block;
+    height: 50px;
+    padding: 5px;
+    margin-left: 20px;
+}
+.logosistema2 {
+    display: inline-block;
+    padding: 6px 10px 6px 10px;
+    height: 38px;
+    margin-bottom: 5px;
+}
+
+.logosistema2b {
+    display: inline-block;
+    padding: 6px 10px 6px 10px;
+    height: 48px;
+}
+.userico {
+    background-image: url(#{$NombreDelSistema}/resources/imagen/user.png);
+    background-repeat: no-repeat;
+    background-position: 0px;
+    background-size: 20px;
+    margin-right: 10px;
+    padding: 13px;
+}
+.user{
+    height: 28px !important;
+    @include bordeRadio(2em,0,0,0,!important);
+    border-bottom: none !important;
+    border-right: none !important;
+    margin-top:27px !important;
+    float:right;
+    filter:  progid:DXImageTransform.Microsoft.gradient(startColorstr='#7D2323', endColorstr='#A52E2E') !important;
+    background: -webkit-gradient(linear, left top, left bottom, from(#7D2323), to(#A52E2E)) !important;
+    background: -moz-linear-gradient(top,  #7D2323,  #A52E2E) !important;
+    background: linear-gradient(to bottom,  #7D2323 0%,#A52E2E 100%) !important;
+    @include sombra(0, 0px, 0px, rgba(0, 0, 0, 0.4), false, !important);
+}
+//contenedor de logos
+.cabeceraContenedor {
+    width: 100%;
+    @include degradado(#ffffff,0%,#e5e5e5,100%);
+}
+//boton de perfil
+#nav form:hover a {
+    color:#444;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, .8) !important;
+}
+#nav form:hover .userico {
+    -webkit-filter: brightness(0.25); filter: brightness(0.25);
+}

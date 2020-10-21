@@ -1,0 +1,19 @@
+<f:view contentType="text/html"
+        xmlns="http://www.w3.org/1999/xhtml"
+        xmlns:f="http://java.sun.com/jsf/core"
+        xmlns:p="http://primefaces.org/ui" 
+        xmlns:h="http://java.sun.com/jsf/html">
+
+    <p:panelGrid  columns="1" columnClasses="ui-grid-col-12" layout="grid" class="boxshadowinside pnoborder"> 
+        <p:panelGrid  columns="2" columnClasses="ui-grid-col-6,ui-grid-col-6" layout="grid">                
+            <p:outputLabel for="cantMasculino" value="Participantes Masculinos: "/>
+            <p:inputText id="cantMasculino" value="#{actividadGPOAdministrado.entidadSeleccionada.numContadorMarculino}">
+                <p:ajax event="blur" update="@this"/>
+            </p:inputText>
+            <p:outputLabel for="cantFemenino" value="Participantes. Femeninos: "/>
+            <p:inputText id="cantFemenino" value="#{actividadGPOAdministrado.entidadSeleccionada.numContadorFemenino}">
+                <p:ajax event="blur" update="@this" />
+            </p:inputText>                
+        </p:panelGrid>            
+    </p:panelGrid>     
+</f:view>

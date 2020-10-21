@@ -1,0 +1,171 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:f="http://java.sun.com/jsf/core"
+                template="/WEB-INF/templates/default.xhtml">
+    <ui:define name="header">
+
+    </ui:define>
+    <ui:define name="content" >
+        <div class="pcenter">
+            <p:outputLabel value="Listado de Gobiernos" class="ptextGradient pred pbold ptitle"/>
+        </div>
+        <p:spacer/>
+
+        <script type="text/javascript">
+            function start() {
+                PF('statusDialog').show();
+            }
+
+            function stop() {
+                PF('statusDialog').hide();
+            }
+        </script>
+
+        <h:form id="formularioPrincipal">
+            <p:growl id="mensajes" showDetail="true" life="#{parametroSiscapAdministrado.tiempoAlertas()}"/>   
+
+            <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+                <p:commandButton value="Si" styleClass="ui-confirmdialog-yes" icon="ui-icon-check"/>
+                <p:commandButton value="No" styleClass="ui-confirmdialog-no" icon="ui-icon-close" />
+            </p:confirmDialog>
+
+            <p:fieldset legend="Filtros/Opciones:" >
+                <p:panelGrid columns="1" columnClasses="ui-grid-col-12" layout="grid" class="pnoborder">
+                    <p:commandButton value="Nuevo"
+                                     class="pfloatR"
+                                     update=":dialogoNuevoGobierno"
+                                     oncomplete="PF('dialogoNuevoGobierno').show();" 
+                                     action="#{gobiernoAdministrado.limpiarGobierno()}"
+                                     title="Nuevo Gobierno" 
+                                     icon="ui-icon-plus">
+                        <f:setPropertyActionListener value="#{true}" target="#{gobiernoAdministrado.modoEdicion}"/>
+                    </p:commandButton>
+                </p:panelGrid>
+            </p:fieldset>
+
+            <p:spacer/>
+            <p:panelGrid columns="1" columnClasses="ui-grid-col-12" layout="grid" class="pnoborder">
+                <p:dataTable id="tablaGobierno"
+                             class="tablaGobierno"
+                             widgetVar="tablaGobierno" 
+                             var="itemGobierno" 
+                             value="#{gobiernoAdministrado.gobiernoList}"                     
+                             rowKey="#{itemGobierno.nidGobierno}"
+                             rows="10" 
+                             paginator="true" 
+                             paginatorPosition="bottom"
+                             rowStyleClass="#{itemGobierno.flgActivo eq 0 ? 'colored' : null}"
+                             rowsPerPageTemplate="10,15,20"
+                             currentPageReportTemplate="Mostrando {startRecord}-{endRecord} de {totalRecords}"
+                             paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} 
+                             {NextPageLink} {LastPageLink} {RowsPerPageDropdown}">
+
+                    <p:ajax event="rowSelect" listener="#{gobiernoAdministrado.setEntidadSeleccionada(itemGobierno)}"/>                    
+
+                    <p:column headerText="ACCIONES"  width="20" class="pcenter">  
+                        <p:commandButton update=":dialogoVerGobierno :formularioPrincipal:mensajes"
+                                         oncomplete="PF('dialogoVerGobierno').show();" 
+                                         title="Ver Gobierno" icon="ui-icon-search" immediate="true" process="@this">
+                            <f:setPropertyActionListener value="#{false}" target="#{gobiernoAdministrado.modoEdicion}"/>                            
+                            <f:setPropertyActionListener value="#{itemGobierno}" target="#{gobiernoAdministrado.entidadSeleccionada}" />
+                        </p:commandButton>
+                        <p:commandButton update=":dialogoEditarGobierno :formularioPrincipal:mensajes"
+                                         oncomplete="PF('dialogoEditarGobierno').show();"
+                                         title="Editar" icon="ui-icon-pencil" immediate="true" process="@this">
+                            <f:setPropertyActionListener value="#{false}" target="#{gobiernoAdministrado.modoEdicion}"/>                          
+                            <f:setPropertyActionListener value="#{itemGobierno}" target="#{gobiernoAdministrado.entidadSeleccionada}"/>
+                        </p:commandButton>
+                        <p:commandButton id="commandButtonDelete" 
+                                         update="@(.tablaGobierno)" process="@this"
+                                         title="Anular" icon="ui-icon-trash" action="#{gobiernoAdministrado.anularGobierno(itemGobierno)}">                  
+                            <p:confirm header="Confirmacion" message="Se anulara el elemento seleccionado, desea continuar?" icon="ui-icon-alert" />
+                        </p:commandButton>
+                    </p:column>
+
+                    <p:column headerText="ID" width="20" class="pcenter" filterMatchMode="contains" filterBy="#{itemGobierno.nidGobierno}" >
+                        <h:outputText value="#{itemGobierno.nidGobierno}" />
+                    </p:column>
+
+                    <p:column headerText="DESCRIPCION" width="120" class="pleft" filterMatchMode="contains" filterBy="#{itemGobierno.txtGobierno}" >
+                        <h:outputText value="#{itemGobierno.txtGobierno}" />
+                    </p:column>
+
+                    <p:column headerText="TIPO GOBIERNO" width="120" class="pcenter" filterMatchMode="contains" filterBy="#{itemGobierno.nidTipoGobierno}" >
+                        <h:outputText value="#{tipoGobiernoAdministrado.obtenerTipoGobiernoporId(itemGobierno.nidTipoGobierno.nidTipoGobierno)}" />
+                    </p:column>
+
+                    <p:column headerText="ESTADO" width="20" class="pcenter" filterMatchMode="contains" filterBy="#{itemGobierno.flgActivo}" >
+                        <f:facet name="filter">
+                            <p:selectOneMenu onchange="PF('tablaGobierno').filter()" >
+                                <f:selectItem itemLabel="Activo" itemValue="1" />
+                                <f:selectItem itemLabel="Inactivo" itemValue="0" />
+                            </p:selectOneMenu>
+                        </f:facet>
+                        <h:outputText value="#{itemGobierno.flgActivo != 1? 'Inactivo':'Activo'}">
+                            <f:converter converterId="javax.faces.Character" />                                    
+                        </h:outputText>
+                    </p:column> 
+                </p:dataTable>
+            </p:panelGrid>
+        </h:form>
+
+        <p:dialog modal="true" id="dialogoNuevoGobierno" widgetVar="dialogoNuevoGobierno" 
+                  header="Nuevo Gobierno" closeOnEscape="true" resizable="false" width="900px" height="250px" dynamic="false">
+            <h:form>
+                <ui:include src="../panelGobierno.xhtml">
+                    <ui:param name="prefijo" value="nuevoGobierno"/>
+                </ui:include>
+                <p:spacer/>
+                <p:panelGrid columns="1" columnClasses="ui-grid-col-12" layout="grid" class="pnoborder">
+                    <p:column>
+                        <p:commandButton value="Cerrar" onclick="PF('dialogoNuevoGobierno').hide();" type="button" icon="ui-icon-cancel" title="Cierra el dialogo" class="pfloatR"/>
+                        <p:commandButton id="botonRegistrarMedio" 
+                                         class="pfloatR"
+                                         value="Inscribir" 
+                                         update=":formularioPrincipal :formularioPrincipal:mensajes"
+                                         onclick=""  title="Realiza la inscripcion" 
+                                         actionListener="#{gobiernoAdministrado.crearGobierno()}"
+                                         icon="ui-icon-disk" 
+                                         process="@this"/>
+                    </p:column>
+                </p:panelGrid>
+            </h:form>
+        </p:dialog>       
+
+        <p:dialog modal="true" id="dialogoVerGobierno" widgetVar="dialogoVerGobierno" 
+                  header="Ver Gobierno" closable="true" closeOnEscape="true" resizable="false" width="900px" height="250px" dynamic="true">                  
+            <h:form>
+                <ui:include src="../panelGobierno.xhtml">
+                    <ui:param name="prefijo" value="verGobierno"/>
+                </ui:include>
+                <p:spacer/>
+                <p:panelGrid columns="1" columnClasses="ui-grid-col-12" layout="grid" class="pnoborder">
+                    <p:commandButton value="Cerrar" onclick="PF('dialogoVerGobierno').hide();" type="button" icon="ui-icon-cancel" title="Cierra el dialogo" class="pfloatR"/>
+                </p:panelGrid>
+            </h:form>    
+        </p:dialog>
+
+        <p:dialog modal="true" id="dialogoEditarGobierno" widgetVar="dialogoEditarGobierno" 
+                  header="Editar Gobierno" closable="true" closeOnEscape="true" resizable="false" width="900px" height="250px" dynamic="false" onShow="">
+            <h:form>
+                <ui:include src="../panelGobierno.xhtml">
+                    <ui:param name="prefijo" value="editarGobierno"/>
+                </ui:include>
+                <p:spacer/>
+                <p:panelGrid columns="1" columnClasses="ui-grid-col-12" layout="grid" class="pnoborder">
+                    <p:column>
+                        <p:commandButton value="Cerrar" onclick="PF('dialogoEditarGobierno').hide();" type="button" icon="ui-icon-cancel" title="Cierra el dialogo" class="pfloatR"/>
+                        <p:commandButton value="Editar" 
+                                         class="pfloatR"
+                                         update=":formularioPrincipal :formularioPrincipal:mensajes" 
+                                         onclick=""  title="Realiza la edicion" actionListener="#{gobiernoAdministrado.editarGobierno(gobiernoAdministrado.entidadSeleccionada)}"
+                                         icon="ui-icon-disk" 
+                                         process="@this"/>
+                    </p:column>
+                </p:panelGrid>
+            </h:form>
+        </p:dialog>        
+    </ui:define>           
+</ui:composition>

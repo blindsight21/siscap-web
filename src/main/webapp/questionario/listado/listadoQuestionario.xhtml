@@ -1,0 +1,275 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:c="http://java.sun.com/jsp/jstl/core"
+                template="/WEB-INF/templates/default.xhtml">
+    <ui:define name="header">
+        <style>
+            .fondonegro .ui-grid-row {
+                background-color: #5a5a5a !important;
+                margin-bottom: 0px !important;
+            }
+        </style>
+    </ui:define>
+    <ui:define name="content" >
+        <div class="pcenter">
+            <p:outputLabel value="Listado de Preguntas" class="ptextGradient pred pbold ptitle"/>
+        </div>
+        <p:spacer/>
+
+        <script type="text/javascript">
+            function start() {
+                PF('statusDialog').show();
+            }
+
+            function stop() {
+                PF('statusDialog').hide();
+            }
+        </script>
+
+        <h:form id="formularioPrincipal">
+            <p:growl id="mensajes" showDetail="true" life="#{parametroSiscapAdministrado.tiempoAlertas()}"/>   
+
+            <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+                <p:commandButton value="Si" styleClass="ui-confirmdialog-yes" icon="ui-icon-check"/>
+                <p:commandButton value="No" styleClass="ui-confirmdialog-no" icon="ui-icon-close" />
+            </p:confirmDialog>
+
+            <p:fieldset legend="Filtros/Opciones:" >
+                <p:panelGrid columns="1" columnClasses="ui-grid-col-12" layout="grid" class="pnoborder">
+                    <p:column>
+                        <p:commandButton value="Nuevo Questionario"
+                                         class="pfloatR"
+                                         update="@(.dialogoNuevoQuestionario)"
+                                         oncomplete="PF('dialogoNuevoQuestionario').show()"
+                                         action="#{questionarioAdministrado.limpiar()}"
+                                         title="Nuevo Questionario"
+                                         icon="ui-icon-plus">                            
+                        </p:commandButton>
+                    </p:column>
+                </p:panelGrid>
+            </p:fieldset>
+            <p:spacer/>
+            <p:panelGrid columns="1" columnClasses="ui-grid-col-12" layout="grid" class="pnoborder">
+                <p:dataTable id="tablaQuestionario"
+                             class="tablaQuestionario"                             
+                             widgetVar="tablaQuestionario"
+                             value="#{questionarioAdministrado.entidades}"
+                             selection="#{questionarioAdministrado.entidadSeleccionada}"
+                             rowKey="#{itemQuestionario.nidQuestionario}"
+                             var="itemQuestionario"
+                             rows="10"
+                             paginator="true"
+                             paginatorPosition="bottom"
+                             rowStyleClass=""
+                             rowsPerPageTemplate="10,15,20"
+                             currentPageReportTemplate="Mostrando {startRecord}-{endRecord} de {totalRecords}"
+                             paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}">
+
+                    <p:ajax event="rowToggle" listener="#{questionarioAdministrado.setearEntidad(itemQuestionario)}"/>  
+
+                    <p:column style="width:16px">
+                        <p:rowToggler />
+                    </p:column>
+
+                    <p:column headerText="ACCIONES" width="10%" class="pleft">
+                        <p:commandButton title="Ver Pregunta" 
+                                         update="@(.dialogoVerQuestionario)"
+                                         oncomplete="PF('dialogoVerQuestionario').show();"
+                                         icon="ui-icon-search" immediate="true" process="@this">
+                            <f:setPropertyActionListener value="#{itemQuestionario}" target="#{questionarioAdministrado.entidadSeleccionada}"/>
+                        </p:commandButton>
+                        <p:commandButton title="Editar Pregunta"
+                                         update="@(.dialogoEditarQuestionario)"
+                                         oncomplete="PF('dialogoEditarQuestionario').show();"
+                                         icon="ui-icon-pencil" immediate="true" process="@this">
+                            <f:setPropertyActionListener value="#{itemQuestionario}" target="#{questionarioAdministrado.entidadSeleccionada}"/>
+                        </p:commandButton>                        
+                        <p:commandButton id="anularQuestionario"
+                                         update="@(.tablaQuestionario)"
+                                         action="#{questionarioAdministrado.anularQuestionario(itemQuestionario)}"
+                                         title="Anular Pregunta" icon="ui-icon-trash" immediate="true" process="@this">
+                            <p:confirm header="Confirmacion" message="Se anulara el elemento seleccionado, desea continuar?" icon="ui-icon-alert" />
+                        </p:commandButton>
+
+                    </p:column>                    
+                    <p:column headerText="PREGUNTA" width="70%" class="pleft" filterBy="#{itemQuestionario.txtQuestionario}">
+                        <p:outputLabel value="#{itemQuestionario.txtQuestionario}"/>
+                    </p:column>
+                    <p:column headerText="NRO. ORDEN" width="10%" class="pcenter" filterBy="#{itemQuestionario.numOrden}">
+                        <p:outputLabel value="#{itemQuestionario.numOrden}"/>
+                    </p:column>
+
+                    <p:rowExpansion>
+                        <p:panelGrid columns="1" columnClasses="ui-grid-col-12" layout="grid" class="pnoborder">
+
+                            <p:commandButton value="Nueva Respuesta"
+                                             class="pfloatR"
+                                             update="@(.dialogoNuevoRespuestaQuestionario)"
+                                             oncomplete="PF('dialogoNuevoRespuestaQuestionario').show()"
+                                             action="#{respuestaQuestionarioAdministrado.limpiar()}"
+                                             title="Nueva Respuesta"
+                                             icon="ui-icon-plus">
+                            </p:commandButton>
+
+                            <p:dataTable id="tablaRespuestaQuestionario"
+                                         class="tablaRespuestaQuestionario"
+                                         widgetVar="tablaRespuestaQuestionario"
+                                         var="itemRespuestaQuestionario"
+                                         value="#{questionarioAdministrado.obtenerRespuestaQuestionario(itemQuestionario)}"
+                                         selection="#{respuestaQuestionarioAdministrado.entidadSeleccionada}"
+                                         rowKey="#{itemRespuestaQuestionario.nidRespuestaQuestionario}"
+                                         rows="10"
+                                         paginator="true"
+                                         paginatorPosition="bottom"
+                                         rowStyleClass=""
+                                         rowsPerPageTemplate="10,15,20"
+                                         currentPageReportTemplate="Mostrando {startRecord}-{endRecord} de {totalRecords}"
+                                         paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}">
+
+                                <p:ajax event="rowSelect" listener="#{questionarioAdministrado.setEntidadSeleccionada(itemRespuestaQuestionario)}"/>
+
+                                <p:column headerText="ACCIONES" width="10%" class="pleft">                                    
+                                    <p:commandButton title="Editar Respuesta"
+                                                     update="@(.dialogoEditarResultadoQuestionario)"
+                                                     oncomplete="PF('dialogoEditarResultadoQuestionario').show();"
+                                                     icon="ui-icon-pencil" immediate="true" process="@this">
+                                        <f:setPropertyActionListener value="#{itemRespuestaQuestionario}" target="#{respuestaQuestionarioAdministrado.entidadSeleccionada}"/>
+                                    </p:commandButton>
+                                    <p:commandButton id="anularRespuestaQuestionario"
+                                                     update="@(.tablaRespuestaQuestionario)"
+                                                     action="#{respuestaQuestionarioAdministrado.anularRespuestaQuestionario(itemRespuestaQuestionario)}"
+                                                     title="Anular Respuesta" icon="ui-icon-trash" immediate="true" process="@this">
+                                        <p:confirm header="Confirmacion" message="Se anulara el elemento seleccionado, desea continuar?" icon="ui-icon-alert" />
+                                    </p:commandButton>
+                                </p:column>
+
+                                <p:column headerText="RESPUESTA" width="70%" class="pcenter" filterBy="#{itemRespuestaQuestionario.txtRespuesta}">
+                                    <p:outputLabel value="#{itemRespuestaQuestionario.txtRespuesta}"/>
+                                </p:column>
+                                <p:column headerText="PUNTAJE" width="20%" class="pcenter" filterBy="#{itemRespuestaQuestionario.numNota}">
+                                    <p:outputLabel value="#{itemRespuestaQuestionario.numNota}"/>
+                                </p:column>
+                                <p:column headerText="NRO. ORDEN" width="10%" class="pcenter" filterBy="#{itemRespuestaQuestionario.numOrden}">
+                                    <p:outputLabel value="#{itemRespuestaQuestionario.numOrden}"/>
+                                </p:column>
+                            </p:dataTable>
+                        </p:panelGrid>                        
+                    </p:rowExpansion>
+                </p:dataTable>
+            </p:panelGrid>
+        </h:form>
+
+        <p:dialog modal="false" id="dialogoNuevoQuestionario" widgetVar="dialogoNuevoQuestionario" class="dialogoNuevoQuestionario"
+                  header="Nuevo Questionario" closable="true" closeOnEscape="true" resizable="false" width="700px" height="150px" dynamic="true">
+            <h:form>
+                <ui:include src="../panelQuestionario.xhtml">
+                    <ui:param name="prefio" value="NuevoQuestionario"/>
+                </ui:include>
+                <p:spacer/>
+                <p:panelGrid columns="1" columnClasses="ui-grid-col-12" layout="grid" class="pnoborder">
+                    <p:column>
+                        <p:commandButton value="Cerrar" onclick="PF('dialogoNuevoQuestionario').hide();" type="button"
+                                         icon="ui-icon-cancel" title="Cierra el dialogo" class="pfloatR"/>                        
+                        <p:commandButton id="botonRegistrarQuestionario"
+                                         class="pfloatR"
+                                         value="Inscribir"
+                                         update="@(.dialogoNuevoQuestionario) @(.tablaQuestionario)"
+                                         title="Realiza la inscripcion"
+                                         action="#{questionarioAdministrado.crearQuestionario()}"
+                                         icon="ui-icon-disk"
+                                         oncomplete="PF('dialogoNuevoQuestionario').hide();"/>                    
+                    </p:column>
+                </p:panelGrid> 
+            </h:form>
+        </p:dialog>
+
+        <p:dialog modal="false" id="dialogoVerQuestionario" widgetVar="dialogoVerQuestionario" class="dialogoVerQuestionario"
+                  header="Ver Questionario" closable="true" closeOnEscape="true" resizable="false" width="700px" height="150px" dynamic="true">                  
+            <h:form>
+                <ui:include src="../panelQuestionario.xhtml">
+                    <ui:param name="prefijo" value="VerQuestionario"/>
+                </ui:include>
+                <p:spacer/>
+                <p:panelGrid columns="1" columnClasses="ui-grid-col-12" layout="grid" class="pnoborder">
+                    <p:commandButton value="Cerrar" onclick="PF('dialogoVerQuestionario').hide();" type="button" icon="ui-icon-cancel" title="Cierra el dialogo" class="pfloatR"/>
+                </p:panelGrid>
+            </h:form>    
+        </p:dialog>
+
+        <p:dialog modal="false" id="dialogoEditarQuestionario" widgetVar="dialogoEditarQuestionario" class="dialogoEditarQuestionario"
+                  header="Editar Questionario" closable="true" closeOnEscape="true" resizable="false" width="700px" height="150px" dynamic="false">
+            <h:form>
+                <ui:include src="../panelQuestionario.xhtml">
+                    <ui:param name="prefijo" value="EditarQuestionario"/>
+                </ui:include>
+                <p:spacer/>
+                <p:panelGrid columns="1" columnClasses="ui-grid-col-12" layout="grid" class="pnoborder">
+                    <p:column>
+                        <p:commandButton value="Cerrar" onclick="PF('dialogoEditarQuestionario').hide();" type="button"
+                                         icon="ui-icon-cancel" title="Cierra el dialogo" class="pfloatR"/>
+                        <p:commandButton id="botonEditarQuestionario"
+                                         value="Editar" 
+                                         class="pfloatR"
+                                         update="@(.dialogoEditarQuestionario) @(.tablaQuestionario)" 
+                                         onclick=""  title="Realiza la edicion" actionListener="#{questionarioAdministrado.editarQuestionario(questionarioAdministrado.entidadSeleccionada)}"
+                                         process="@this"
+                                         icon="ui-icon-disk" 
+                                         oncomplete="PF('dialogoEditarQuestionario').hide();"/>
+                    </p:column>
+                </p:panelGrid>
+            </h:form>
+        </p:dialog> 
+
+
+        <p:dialog modal="false" id="dialogoNuevoRespuestaQuestionario" widgetVar="dialogoNuevoRespuestaQuestionario" class="dialogoNuevoRespuestaQuestionario"
+                  header="Nuevo Respuesta Questionario" closable="true" closeOnEscape="true" resizable="false" width="700px" height="150px" dynamic="true">
+            <h:form>
+                <ui:include src="../panelRespuestaQuestionario.xhtml">
+                    <ui:param name="prefio" value="NuevoRespuestaQuestionario"/>
+                </ui:include>
+                <p:spacer/>
+                <p:panelGrid columns="1" columnClasses="ui-grid-col-12" layout="grid" class="pnoborder">
+                    <p:column>
+                        <p:commandButton value="Cerrar" onclick="PF('dialogoNuevoRespuestaQuestionario').hide();" type="button"
+                                         icon="ui-icon-cancel" title="Cierra el dialogo" class="pfloatR"/>                        
+                        <p:commandButton id="botonRegistrarRespuestaQuestionario"
+                                         class="pfloatR"
+                                         value="Inscribir"
+                                         update="@(.dialogoNuevoRespuestaQuestionario) @(.tablaRespuestaQuestionario)"
+                                         title="Realiza la inscripcion"
+                                         action="#{respuestaQuestionarioAdministrado.crearRespuestaQuestionario()}"
+                                         icon="ui-icon-disk"
+                                         oncomplete="PF('dialogoNuevoRespuestaQuestionario').hide();"/>                    
+                    </p:column>
+                </p:panelGrid> 
+            </h:form>
+        </p:dialog>
+
+        <p:dialog modal="false" id="dialogoEditarResultadoQuestionario" widgetVar="dialogoEditarResultadoQuestionario" class="dialogoEditarResultadoQuestionario"
+                  header="Editar Respuesta Questionario" closable="true" closeOnEscape="true" resizable="false" width="700px" height="150px" dynamic="false">
+            <h:form>
+                <ui:include src="../panelRespuestaQuestionario.xhtml">
+                    <ui:param name="prefijo" value="EditarRespuestaQuestionario"/>
+                </ui:include>
+                <p:spacer/>
+                <p:panelGrid columns="1" columnClasses="ui-grid-col-12" layout="grid" class="pnoborder">
+                    <p:column>
+                        <p:commandButton value="Cerrar" onclick="PF('dialogoEditarResultadoQuestionario').hide();" type="button"
+                                         icon="ui-icon-cancel" title="Cierra el dialogo" class="pfloatR"/>
+                        <p:commandButton id="botonEditarRespuestaQuestionario"
+                                         value="Editar" 
+                                         class="pfloatR"
+                                         update="@(.dialogoEditarResultadoQuestionario) @(.tablaRespuestaQuestionario)" 
+                                         onclick=""  title="Realiza la edicion" actionListener="#{respuestaQuestionarioAdministrado.editarRespuestaQuestionario(respuestaQuestionarioAdministrado.entidadSeleccionada)}"
+                                         process="@this"
+                                         icon="ui-icon-disk" 
+                                         oncomplete="PF('dialogoEditarResultadoQuestionario').hide();"/>
+                    </p:column>
+                </p:panelGrid>
+            </h:form>
+        </p:dialog>
+    </ui:define>
+</ui:composition>

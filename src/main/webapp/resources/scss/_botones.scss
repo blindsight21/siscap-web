@@ -1,0 +1,41 @@
+.contentexport {
+    display:inline-block;
+    a {
+        margin-left: 1px;
+        margin-right: 1px;
+        border: 1px solid #68727B;
+        background: #68727B url("#{$NombreDelSistema}/faces/javax.faces.resource/images/default.png?ln=primefaces-home") 50% 50% repeat-x;
+        font-weight: normal;
+        color: #ffffff !important;
+        padding: .3em 1em .3em 2.1em;
+        @include bordeRadio(5px,5px,5px,5px);
+        text-decoration: none;
+    }
+    a > img{
+        position:absolute;
+        margin-left: -18px;
+        margin-top: 2px;
+    }
+}
+.btnexportar {
+    position: absolute;
+    background-image: url("#{$NombreDelSistema}/faces/javax.faces.resource/images/ui-icons_ededed_256x240.png?ln=primefaces-home");
+    background-position: -30px -96px;
+    @include tamanios(15px);
+    margin-left: -20px;
+    margin-top: -1px;
+}
+//BOTON DE CERRAR SESION
+.plogout {
+    margin-right: 6px !important;
+    @include bordeRadio(12px,12px,12px,12px,!important);
+}
+//DEGRADADO Y SOMBRA AL PASAR EL MOUSE EN UN BOTON
+button:hover {
+    border: 1px solid #a90329 !important;
+    @include degradado(#a90329,0%,#8f0222,44%,!important);
+    @include sombra(0px, 0px, 8px, #b00b1e, false, !important);
+}
+button:active, button:focus {
+    background: #a90329 !important;
+}

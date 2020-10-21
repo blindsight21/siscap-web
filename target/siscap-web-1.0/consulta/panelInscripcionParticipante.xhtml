@@ -1,0 +1,118 @@
+<f:view contentType="text/html"
+        xmlns="http://www.w3.org/1999/xhtml"
+        xmlns:h="http://java.sun.com/jsf/html"
+        xmlns:f="http://java.sun.com/jsf/core"
+        xmlns:p="http://primefaces.org/ui" >
+
+    <p:panelGrid columns="1" columnClasses="ui-grid-col-12" layout="grid" class="pnoborder">
+
+        <p:fieldset legend="Datos Personales">
+            <p:panelGrid columns="6" columnClasses="ui-grid-col-2,ui-grid-col-2,ui-grid-col-2,ui-grid-col-2,ui-grid-col-2,ui-grid-col-2" layout="grid" class="pnoborder" >
+
+                <p:outputLabel for="apellidoPaterno" value="Apellido Paterno: "/>
+                <p:inputText id="apellidoPaterno" value="#{personaSiscapAdministrado.entidadSeleccionada.txtApellidoPaterno}">
+                    <p:ajax event="blur" process="@this"/>
+                </p:inputText>
+                <p:outputLabel for="apellidoMaterno" value="Apellido Materno: "/>
+                <p:inputText id="apellidoMaterno" value="#{personaSiscapAdministrado.entidadSeleccionada.txtApellidoMaterno}">
+                    <p:ajax event="blur" process="@this"/>
+                </p:inputText>
+                <p:outputLabel for="nombre" value="Nombres: "/>
+                <p:inputText id="nombre" value="#{personaSiscapAdministrado.entidadSeleccionada.txtNombres}">
+                    <p:ajax event="blur" process="@this"/>
+                </p:inputText>
+                <p:outputLabel for="tipoDocumento" value="Tipo Documento: "/>                        
+                <p:selectOneMenu id="tipoDocumento"
+                                 required="true"
+                                 value="#{personaSiscapAdministrado.entidadSeleccionada.nidTipoDocumento}">
+                    <f:selectItem itemLabel="Seleccionar" itemValue="#{null}" noSelectionOption="true"/>
+                    <f:selectItems value="#{personaSiscapAdministrado.obtenerTiposDocumentoParticipante()}"
+                                   var="itemTipoDocumento"
+                                   itemValue="#{itemTipoDocumento.nidTipoDocumento}"
+                                   itemLabel="#{itemTipoDocumento.txtDescripcion}" />                            
+                    <p:ajax update="@this"/>
+                </p:selectOneMenu>
+                <p:outputLabel for="numeroDocumento" value="Numero Documento: "/>
+                <p:inputText id="numeroDocumento" value="#{personaSiscapAdministrado.entidadSeleccionada.txtDocumento}">
+                    <p:ajax event="blur" process="@this"/>
+                </p:inputText>
+                <p:outputLabel for="fechaNacimiento" value="Fecha Nacimiento: "/>                        
+                <p:calendar id="fechaNacimiento" value="#{personaSiscapAdministrado.entidadSeleccionada.fecNacimiento}" pattern="dd/MM/yyyy" navigator="true" mask="true" locale="es" yearRange="c-100:c+10">
+                    <p:ajax event="dateSelect"/>
+                </p:calendar>
+                <p:outputLabel for="sexo" value="Sexo: "/>
+                <p:selectOneMenu id="sexo" value="#{personaSiscapAdministrado.entidadSeleccionada.txtSexo}" widgetVar="sexo">
+                    <f:selectItem itemLabel="Seleccionar" itemValue="" noSelectionOption="true"/>
+                    <f:selectItem itemLabel="HOMBRE" itemValue="M" />
+                    <f:selectItem itemLabel="MUJER" itemValue="F" />
+                    <p:ajax update="@this"/>
+                </p:selectOneMenu>
+                <p:outputLabel value=""/>
+                <p:outputLabel value=""/>
+                <p:outputLabel value=""/>
+                <p:outputLabel value=""/>
+            </p:panelGrid>
+        </p:fieldset>
+        <p:fieldset legend="Datos Contacto">
+            <p:panelGrid columns="6" columnClasses="ui-grid-col-2,ui-grid-col-2,ui-grid-col-2,ui-grid-col-2,ui-grid-col-2,ui-grid-col-2" layout="grid" class="pnoborder" >
+
+                <p:outputLabel for="email" value="Correo: "/>
+                <p:inputText id="email" value="#{personaSiscapAdministrado.correoPersonaSiscap.txtCorreoPersonaSiscap}">
+                    <p:ajax event="blur" process="@this"/>
+                </p:inputText>
+                <p:outputLabel for="tipoTelefono" value="Tipo Telefono: "/>
+                <p:selectOneMenu id="tipoTelefono" required="true" value="#{personaSiscapAdministrado.telefonoPersonaSiscap.nidTipoTelefono}" widgetVar="tipoTelefono">
+                    <f:selectItem itemLabel="Seleccionar" itemValue="" noSelectionOption="true"/>
+                    <f:selectItem itemLabel="CELULAR" itemValue="1" />
+                    <f:selectItem itemLabel="TRABAJO" itemValue="2" />
+                    <f:selectItem itemLabel="CASA" itemValue="3"/>
+                    <p:ajax update="@this"/>
+                </p:selectOneMenu>
+                <p:outputLabel for="numeroTelefono" value="Numero Telefono:  "/>
+                <p:inputText id="numeroTelefono" value="#{personaSiscapAdministrado.telefonoPersonaSiscap.txtTelefonoPersonaSiscap}">
+                    <p:ajax event="blur" process="@this"/>
+                </p:inputText>                        
+            </p:panelGrid>
+        </p:fieldset>
+        <p:fieldset legend="Datos Actividad">
+            <p:panelGrid columns="1" columnClasses="ui-grid-col-12" layout="grid" class="pnoborder" >
+                <p:dataTable paginatorPosition="bottom"
+                             id="tablaActividadProgramada"
+                             class="tablaActividadProgramada"
+                             widgetVar="tablaActividadProgramada"
+                             var="itemAP"
+                             value="#{actividadGobAdministrado_bck.entidadConsulta}"
+                             selection="#{personaSiscapAdministrado.actividaGob}"
+                             rowKey="#{itemAP.nidActividadGob}"
+                             rows="7"
+                             paginator="true"
+                             selectionMode="single"
+                             rowsPerPageTemplate="5,15,20"
+                             currentPageReportTemplate="Mostrando {startRecord}-{endRecord} de {totalRecords}"
+                             paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}">
+
+                    <p:ajax event="rowSelect" update="@this" immediate="true"/>
+
+                    <p:column selectionMode="single" width="16"/>
+
+                    <p:column headerText="TAREA PROGRAMADA" width="120%" filterBy="#{itemAP.txtTema}">
+                        <p:outputLabel value="#{itemAP.txtTema}"/>
+                    </p:column>
+                    <p:column headerText="SEDE ENCUENTRO" width="100%" filterBy="#{gobiernoAdministrado.obtenerGobiernoporId(itemAP.nidGobierno.nidGobierno)}">
+                        <p:outputLabel value="#{gobiernoAdministrado.obtenerGobiernoporId(itemAP.nidGobierno.nidGobierno)}"/>
+                    </p:column>
+                    <p:column headerText="FECHA INICIO" width="40%" class="pcenter">
+                        <p:outputLabel value="#{itemAP.fecInicio}">
+                            <f:convertDateTime pattern="dd/MM/yyyy"/>
+                        </p:outputLabel>
+                    </p:column>
+                    <p:column headerText="FECHA FIN" width="40%" class="pcenter">
+                        <p:outputLabel value="#{itemAP.fecFin}">
+                            <f:convertDateTime pattern="dd/MM/yyyy"/>
+                        </p:outputLabel>
+                    </p:column>
+                </p:dataTable>                
+            </p:panelGrid>
+        </p:fieldset>
+    </p:panelGrid>    
+</f:view>

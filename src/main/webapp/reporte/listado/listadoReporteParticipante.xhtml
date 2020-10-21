@@ -1,0 +1,78 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:c="http://java.sun.com/jsp/jstl/core"
+                template="/WEB-INF/templates/default.xhtml">
+    <ui:define name="header">
+        <style>
+            .fondonegro .ui-grid-row {
+                background-color: #5a5a5a !important;
+                margin-bottom: 0px !important;
+            }
+        </style>
+    </ui:define>
+    <ui:define name="content" >
+        <div class="pcenter">
+            <p:outputLabel value="REPORTE DE ACTIVIDADES POR PARTICIPANTE" class="ptextGradient pred pbold ptitle"/>
+        </div>
+        <p:spacer/>
+
+        <script type="text/javascript">
+            function start() {
+                PF('statusDialog').show();
+            }
+
+            function stop() {
+                PF('statusDialog').hide();
+            }
+        </script>
+        <h:form id="formularioPrincipal">
+            <p:growl id="mensajes" showDetail="true" life="#{parametroSiscapAdministrado.tiempoAlertas()}"/>
+
+            <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+                <p:commandButton value="Si" type="button" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" />
+                <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="ui-icon-close" />
+            </p:confirmDialog>
+            <p:spacer/>
+            <p:panelGrid columns="1" columnClasses="ui-grid-col-12" layout="grid" class="pnoborder">
+                <p:dataTable
+                    id="tablaReporteP"
+                    class="tablaReporteP"
+                    widgetVar="tablaReporteP"
+                    var="itemReporteP"
+                    value="#{vwParticipanteActividadAdministrado.entidades}"                    
+                    rows="10"
+                    paginator="true"
+                    paginatorPosition="bottom"
+                    rowStyleClass=""
+                    rowsPerPageTemplate="10,15,20"
+                    currentPageReportTemplate="Mostrando {startRecord}-{endRecord} de {totalRecords}"
+                    paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}">
+                    
+                    <p:column headerText="ACTIVIDAD" width="100%" class="pcenter" >
+                        <p:outputLabel value="#{itemReporteP.txtTema}"/>
+                    </p:column>
+                    <p:column headerText="NOMBRE" width="100%" class="pcenter">
+                        <p:outputLabel value="#{itemReporteP.txtNombres}"/>
+                    </p:column>
+                    <p:column headerText="APELLIDO PATERNO" width="100%" class="pcenter">
+                        <p:outputLabel value="#{itemReporteP.txtApellidoPaterno}"/>
+                    </p:column>
+                    <p:column headerText="APELLIDO MATERNO" width="100%" class="pcenter">
+                        <p:outputLabel value="#{itemReporteP.txtApellidoMaterno}"/>
+                    </p:column>
+                    <p:column headerText="DOCUMENTO" width="50%" class="pcenter">
+                        <p:outputLabel value="#{itemReporteP.txtDocumento}"/>
+                    </p:column>
+                    <p:column headerText="FECHA NACIMIENTO" width="50%" class="pcenter">
+                        <p:outputLabel value="#{itemReporteP.fecNacimiento}">
+                            <f:convertDateTime pattern="dd/MM/yyyy"/>
+                        </p:outputLabel>
+                    </p:column>                    
+                </p:dataTable>
+            </p:panelGrid>
+        </h:form>        
+    </ui:define>
+</ui:composition>

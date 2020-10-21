@@ -1,0 +1,49 @@
+<f:view contentType="text/html"
+        xmlns="http://www.w3.org/1999/xhtml"
+        xmlns:h="http://java.sun.com/jsf/html"
+        xmlns:f="http://java.sun.com/jsf/core"
+        xmlns:p="http://primefaces.org/ui"
+        xmlns:c="http://java.sun.com/jsp/jstl/core"
+        xmlns:pe="http://primefaces.org/ui/extensions">
+
+    <h:form>
+        <p:remoteCommand name="activarAyuda" action="#{ayudaAdministrado.setActivarAyuda(true)}" update="formularioPrincipal"/>
+        <p:remoteCommand name="desactivarAyuda" action="#{ayudaAdministrado.setActivarAyuda(false)}" update="formularioPrincipal"/>
+    </h:form>
+
+    <script type="text/javascript">
+        function activar() {
+            activarAyuda();
+        }
+        function desactivar() {
+            desactivarAyuda();
+        }
+    </script>
+
+    <aside draggable="true" id="dragme" class="contenedorAnimacion" style="z-index: 5000;position: absolute;display: none;bottom: 60px;left: 15px;">
+        <div class="contenedorTitulo" style="display: none;position: relative;text-align: center;color:red;font-size: 14px">
+            <blockquote class="example-obtuse">
+                <p>Seleccione un elemento</p><p>para ver una descripcion</p>
+            </blockquote>    
+        </div>
+        <div class="error404page" style="zoom: 0.2 !important">
+            <div class="newcharacter404" style="margin-top: 600px">
+                <div class="chair404"></div>
+                <div class="leftshoe404"></div>
+                <div class="rightshoe404"></div>
+                <div class="legs404"></div>
+                <div class="torso404">
+                    <div class="body404"></div>
+                    <div class="leftarm404"></div>
+                    <div class="rightarm404"></div>
+                    <div class="head404">
+                        <div class="eyes404"></div>
+                    </div>
+                </div>
+                <div class="laptop404"></div>
+            </div>
+        </div>
+    </aside>
+
+</f:view>
+
