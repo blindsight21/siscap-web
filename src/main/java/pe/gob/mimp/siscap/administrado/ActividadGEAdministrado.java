@@ -15,7 +15,10 @@ import pe.gob.mimp.general.administrado.AdministradorAbstracto;
 import pe.gob.mimp.seguridad.administrado.UsuarioAdministrado;
 import pe.gob.mimp.siscap.modelo.ActividadGob;
 import pe.gob.mimp.siscap.modelo.ActividadGobEActGob;
+import pe.gob.mimp.siscap.util.SiscapWebUtil;
 import pe.gob.mimp.siscap.ws.actividadge.cliente.ActividadGECallService;
+import pe.gob.mimp.siscap.ws.rendimiento.cliente.RendimientoCallService;
+import pe.gob.mimp.util.EnumFuncionalidad;
 
 @ManagedBean
 @ViewScoped
@@ -31,6 +34,8 @@ public class ActividadGEAdministrado extends AdministradorAbstracto implements S
     private ActividadGECallService actividadGECallService;
 
     UsuarioAdministrado usuarioAdministrado = (UsuarioAdministrado) getFacesContext().getApplication().createValueBinding("#{usuarioAdministrado}").getValue(getFacesContext());
+    @Inject
+    private RendimientoCallService rendimientoCallService;
 
     public ActividadGEAdministrado() {
 
@@ -54,13 +59,14 @@ public class ActividadGEAdministrado extends AdministradorAbstracto implements S
     }
 
     public String obtenerEstado(ActividadGob actividadGobierno) {
+        long startTime = System.currentTimeMillis();
         String estado = "";
 
         try {
             Map<String, Object> parameters = new HashMap<>();
             parameters.put("nidActividadGob", actividadGobierno);
             parameters.put("flgActivo", CoreConstant.STATUS_ACTIVE);
-            
+
             FindByParamBean findByParamBean = new FindByParamBean();
             findByParamBean.setParameters(parameters);
             findByParamBean.setOrderBy("nidActividadGob");
@@ -69,8 +75,16 @@ public class ActividadGEAdministrado extends AdministradorAbstracto implements S
             if (null != estados && 0 < estados.size()) {
                 estado = estados.get(0).getNidEstadoActividadGob().getTxtEstadoActividadGob();
             }
+            long stopTime = System.currentTimeMillis();
+            rendimientoCallService.crearRendimiento(
+                    SiscapWebUtil.crearRendimiento(
+                            Thread.currentThread().getStackTrace()[1].getMethodName(),
+                            EnumFuncionalidad.ACTIVIDADES.getNidFuncionalidadBigInteger(),
+                            SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                            usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+            );
         } catch (Exception e) {
-            Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.SEVERE, null, e);
+            Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.SEVERE, "Error Obtener estado: "+ e.getMessage(), e);
         }
 
         return estado;

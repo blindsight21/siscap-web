@@ -21,12 +21,19 @@ import pe.gob.mimp.constant.CoreConstant;
 import pe.gob.mimp.core.Internet;
 import pe.gob.mimp.core.Util;
 import pe.gob.mimp.siscap.modelo.PublicoObjetivo;
+import pe.gob.mimp.siscap.util.SiscapWebUtil;
 import pe.gob.mimp.siscap.ws.publicoobjetivo.cliente.PublicoObjetivoCallService;
+import pe.gob.mimp.siscap.ws.rendimiento.cliente.RendimientoCallService;
+import pe.gob.mimp.util.EnumFuncionalidad;
 import pe.gob.mimp.utils.Funciones;
 
 @ManagedBean
 @ViewScoped
 public class PublicoObjetivoAdministrado extends AdministradorAbstracto implements Serializable {
+
+    UsuarioAdministrado usuarioAdministrado = (UsuarioAdministrado) getFacesContext().getApplication().createValueBinding("#{usuarioAdministrado}").getValue(getFacesContext());
+    @Inject
+    private RendimientoCallService rendimientoCallService;
 
     private Logger logger = Logger.getLogger(PublicoObjetivo.class.getName());
     private static final long serialVersionUID = 1L;
@@ -43,8 +50,12 @@ public class PublicoObjetivoAdministrado extends AdministradorAbstracto implemen
 
     @PostConstruct
     public void initBean() {
-        this.entidadSeleccionada = new PublicoObjetivo();
-        loadPublicoObjetivoList();
+        try {
+            this.entidadSeleccionada = new PublicoObjetivo();
+            loadPublicoObjetivoList();
+        } catch (Exception e) {
+            
+        }
     }
 
     public PublicoObjetivo getEntidadSeleccionada() {
@@ -64,11 +75,26 @@ public class PublicoObjetivoAdministrado extends AdministradorAbstracto implemen
     }
 
     public PublicoObjetivo getEntidad(String id) {
+
+        long startTime = System.currentTimeMillis();
         PublicoObjetivo publicoObjetivo = null;
 
-        if ((null != id) || (false == id.equals(""))) {
-            publicoObjetivo = publicoObjetivoCallService.find(new BigDecimal(id));
+        try {
+            if ((null != id) || (false == id.equals(""))) {
+                publicoObjetivo = publicoObjetivoCallService.find(new BigDecimal(id));
+            }
+            long stopTime = System.currentTimeMillis();
+            rendimientoCallService.crearRendimiento(
+                    SiscapWebUtil.crearRendimiento(
+                            Thread.currentThread().getStackTrace()[1].getMethodName(),
+                            EnumFuncionalidad.PUBLICO_OBJETIVO.getNidFuncionalidadBigInteger(),
+                            SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                            usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+            );
+        } catch (Exception e) {
+            Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.INFO, "Error getEntidad" + e.getMessage(), Util.tiempo());
         }
+
         return publicoObjetivo;
     }
 
@@ -98,6 +124,7 @@ public class PublicoObjetivoAdministrado extends AdministradorAbstracto implemen
 
     public boolean validarFormulario(boolean isNuevo) {
         try {
+            long startTime = System.currentTimeMillis();
             if (Funciones.esVacio(this.entidadSeleccionada.getTxtPublicoObjetivo().toUpperCase())) {
                 return enviarWarnMessage("Ingrese el Descripción.");
             } else {
@@ -115,6 +142,14 @@ public class PublicoObjetivoAdministrado extends AdministradorAbstracto implemen
                     }
                 }
             }
+            long stopTime = System.currentTimeMillis();
+            rendimientoCallService.crearRendimiento(
+                    SiscapWebUtil.crearRendimiento(
+                            Thread.currentThread().getStackTrace()[1].getMethodName(),
+                            EnumFuncionalidad.PUBLICO_OBJETIVO.getNidFuncionalidadBigInteger(),
+                            SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                            usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+            );
             return true;
         } catch (Exception e) {
             Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.INFO, "Error validarFormulario" + e.getMessage(), Util.tiempo());
@@ -129,6 +164,7 @@ public class PublicoObjetivoAdministrado extends AdministradorAbstracto implemen
 
     public void crearPublicoObjetivo() {
         logger.info(":: PublicoObjetivoAdministrado.crearPublicoObjetivo() :: Starting execution...");
+        long startTime = System.currentTimeMillis();
         if (validarFormulario(true)) {
             try {
                 UsuarioAdministrado usuarioAdministrado = (UsuarioAdministrado) getFacesContext().getApplication().createValueBinding("#{usuarioAdministrado}").getValue(getFacesContext());
@@ -143,10 +179,18 @@ public class PublicoObjetivoAdministrado extends AdministradorAbstracto implemen
                 publicoObjetivoCallService.crearPublicoObjetivo(publicoObjetivo);
 
 //                if (null != publicoObjetivo.getNidPublicoObjetivo()) {
-                    // Update List Browser
-                    loadPublicoObjetivoList();
-                    RequestContext.getCurrentInstance().execute("PF('dialogoNuevoPublicoObjetivo').hide()");
+                // Update List Browser
+                loadPublicoObjetivoList();
+                RequestContext.getCurrentInstance().execute("PF('dialogoNuevoPublicoObjetivo').hide()");
 //                }
+                long stopTime = System.currentTimeMillis();
+                rendimientoCallService.crearRendimiento(
+                        SiscapWebUtil.crearRendimiento(
+                                Thread.currentThread().getStackTrace()[1].getMethodName(),
+                                EnumFuncionalidad.PUBLICO_OBJETIVO.getNidFuncionalidadBigInteger(),
+                                SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                                usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+                );
             } catch (Exception e) {
                 Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.INFO, "Error crearPublicoObjetivo" + e.getMessage(), Util.tiempo());
             }
@@ -156,6 +200,7 @@ public class PublicoObjetivoAdministrado extends AdministradorAbstracto implemen
 
     public void editarPublicoObjetivo(PublicoObjetivo entidadSeleccionada) {
         logger.info(":: PublicoObjetivoAdministrado.editarPublicoObjetivo() :: Starting execution...");
+        long startTime = System.currentTimeMillis();
         if (validarFormulario(true)) {
             try {
                 UsuarioAdministrado usuarioAdministrado = (UsuarioAdministrado) getFacesContext().getApplication().createValueBinding("#{usuarioAdministrado}").getValue(getFacesContext());
@@ -169,6 +214,14 @@ public class PublicoObjetivoAdministrado extends AdministradorAbstracto implemen
                     loadPublicoObjetivoList();
                     RequestContext.getCurrentInstance().execute("PF('dialogoEditarPublicoObjetivo').hide()");
                 }
+                long stopTime = System.currentTimeMillis();
+                rendimientoCallService.crearRendimiento(
+                        SiscapWebUtil.crearRendimiento(
+                                Thread.currentThread().getStackTrace()[1].getMethodName(),
+                                EnumFuncionalidad.PUBLICO_OBJETIVO.getNidFuncionalidadBigInteger(),
+                                SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                                usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+                );
             } catch (Exception e) {
                 Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.INFO, "Error editarPublicoObjetivo" + e.getMessage(), Util.tiempo());
             }
@@ -178,6 +231,7 @@ public class PublicoObjetivoAdministrado extends AdministradorAbstracto implemen
 
     public void anularPublicoObjetivo(PublicoObjetivo entidadSeleccionada) {
         logger.info(":: PublicoObjetivoAdministrado.anularPublicoObjetivo() :: Starting execution...");
+        long startTime = System.currentTimeMillis();
         try {
             UsuarioAdministrado usuarioAdministrado = (UsuarioAdministrado) getFacesContext().getApplication().createValueBinding("#{usuarioAdministrado}").getValue(getFacesContext());
             if (null != entidadSeleccionada) {
@@ -185,11 +239,19 @@ public class PublicoObjetivoAdministrado extends AdministradorAbstracto implemen
                 entidadSeleccionada.setTxtPc(Internet.obtenerNombrePC());
                 entidadSeleccionada.setTxtIp(Internet.obtenerIPPC());
                 entidadSeleccionada.setFecEdicion(new Date());
-                entidadSeleccionada.setFlgActivo(BigInteger.ZERO);                
+                entidadSeleccionada.setFlgActivo(BigInteger.ZERO);
                 publicoObjetivoCallService.editarPublicoObjetivo(entidadSeleccionada);
                 // Update List Browser
                 loadPublicoObjetivoList();
             }
+            long stopTime = System.currentTimeMillis();
+            rendimientoCallService.crearRendimiento(
+                    SiscapWebUtil.crearRendimiento(
+                            Thread.currentThread().getStackTrace()[1].getMethodName(),
+                            EnumFuncionalidad.PUBLICO_OBJETIVO.getNidFuncionalidadBigInteger(),
+                            SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                            usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+            );
         } catch (Exception e) {
             Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.INFO, "Error anularPublicoObjetivo" + e.getMessage(), Util.tiempo());
         }
@@ -199,6 +261,7 @@ public class PublicoObjetivoAdministrado extends AdministradorAbstracto implemen
     public String obtenerPublicoObjetivoporId(BigInteger nidPublicoObjetivo) {
         String resultado = "";
 
+        long startTime = System.currentTimeMillis();
         try {
             if (null != nidPublicoObjetivo) {
                 PublicoObjetivo publicoObjetivo = publicoObjetivoCallService.find(new BigDecimal(nidPublicoObjetivo));
@@ -207,6 +270,14 @@ public class PublicoObjetivoAdministrado extends AdministradorAbstracto implemen
                     resultado = publicoObjetivo.getTxtPublicoObjetivo();
                 }
             }
+            long stopTime = System.currentTimeMillis();
+            rendimientoCallService.crearRendimiento(
+                    SiscapWebUtil.crearRendimiento(
+                            Thread.currentThread().getStackTrace()[1].getMethodName(),
+                            EnumFuncionalidad.PUBLICO_OBJETIVO.getNidFuncionalidadBigInteger(),
+                            SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                            usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+            );
         } catch (Exception e) {
             Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.INFO, "{0}Obtener PublicoObjetivo" + e.getMessage(), Util.tiempo());
         }
@@ -218,8 +289,9 @@ public class PublicoObjetivoAdministrado extends AdministradorAbstracto implemen
         entidadSeleccionada = new PublicoObjetivo();
     }
 
-    private void loadPublicoObjetivoList() {
+    private void loadPublicoObjetivoList() throws Exception {
         logger.info(":: PublicoObjetivoAdministrado.loadPublicoObjetivoList :: Starting execution...");
+        long startTime = System.currentTimeMillis();
         Map<String, Object> parameters = new HashMap<>();
         //parameters.put("flgActivo", CoreConstant.STATUS_ACTIVE);
 
@@ -227,6 +299,14 @@ public class PublicoObjetivoAdministrado extends AdministradorAbstracto implemen
         findByParamBean.setParameters(parameters);
         findByParamBean.setOrderBy("nidPublicoObjetivo");
         this.publicoObjetivoList = publicoObjetivoCallService.loadPublicoObjetivoList(findByParamBean);
+        long stopTime = System.currentTimeMillis();
+        rendimientoCallService.crearRendimiento(
+                SiscapWebUtil.crearRendimiento(
+                        Thread.currentThread().getStackTrace()[1].getMethodName(),
+                        EnumFuncionalidad.PUBLICO_OBJETIVO.getNidFuncionalidadBigInteger(),
+                        SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                        usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+        );
         logger.info(":: PublicoObjetivoAdministrado.loadPublicoObjetivoList :: Execution finish.");
     }
 

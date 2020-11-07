@@ -35,7 +35,7 @@
                 <p:panelGrid columns="1" columnClasses="ui-grid-col-12" layout="grid" class="pnoborder">
                     <p:commandButton value="Nuevo"
                                      class="pfloatR"
-                                     update="@(.dialogoNuevoTipoFuncion)"
+                                     update=":dialogoNuevoTipoFuncion"
                                      oncomplete="PF('dialogoNuevoTipoFuncion').show();" 
                                      action="#{tipoFuncionAdministrado.limpiarTipoFuncion()}"
                                      title="Nuevo Tipo Funcion" 
@@ -120,11 +120,11 @@
                         <p:commandButton id="botonRegistrarTipoFuncion" 
                                          class="pfloatR"
                                          value="Inscribir" 
-                                         update="@(.dialogoNuevoTipoFuncion) @(.tablaTipoFuncion)"
+                                         update=":formularioPrincipal :formularioPrincipal:mensajes"
                                          onclick=""  title="Realiza la inscripcion" 
                                          actionListener="#{tipoFuncionAdministrado.crearTipoFuncion()}"
                                          icon="ui-icon-disk" 
-                                         process="@this"/>
+                                         oncomplete="PF('dialogoNuevoTipoFuncion').hide();"/>
                     </p:column>
                 </p:panelGrid>
             </h:form>
@@ -155,10 +155,10 @@
                         <p:commandButton value="Cerrar" onclick="PF('dialogoEditarTipoFuncion').hide();" type="button" icon="ui-icon-cancel" title="Cierra el dialogo" class="pfloatR"/>
                         <p:commandButton value="Editar" 
                                          class="pfloatR"
-                                         update="@(.dialogoEditarTipoFuncion) @(.tablaTipoFuncion)" 
+                                         update=":formularioPrincipal :formularioPrincipal:mensajes"
                                          onclick=""  title="Realiza la edicion" actionListener="#{tipoFuncionAdministrado.editarTipoFuncion(tipoFuncionAdministrado.entidadSeleccionada)}"
                                          icon="ui-icon-disk" 
-                                         process="@this"/>
+                                         oncomplete="PF('dialogoEditarTipoFuncion').hide();"/>
                     </p:column>
                 </p:panelGrid>
             </h:form>

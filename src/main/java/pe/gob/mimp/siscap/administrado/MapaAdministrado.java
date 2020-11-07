@@ -20,18 +20,26 @@ import pe.gob.mimp.core.Util;
 import pe.gob.mimp.general.modelo.Departamento;
 import pe.gob.mimp.general.modelo.Distrito;
 import pe.gob.mimp.general.modelo.Provincia;
+import pe.gob.mimp.seguridad.administrado.UsuarioAdministrado;
 import pe.gob.mimp.siscap.auxiliar.DatosMarcador;
 import pe.gob.mimp.siscap.auxiliar.PoligonoDepartamento;
+import pe.gob.mimp.siscap.util.SiscapWebUtil;
 import pe.gob.mimp.siscap.ws.departamento.cliente.DepartamentoCallService;
 import pe.gob.mimp.siscap.ws.departamentocoordenadas.cliente.DepartamentoCoordenadasCallService;
 import pe.gob.mimp.siscap.ws.distrito.cliente.DistritoCallService;
 import pe.gob.mimp.siscap.ws.distritocoordenadas.cliente.DistritoCoordenadasCallService;
 import pe.gob.mimp.siscap.ws.provincia.cliente.ProvinciaCallService;
 import pe.gob.mimp.siscap.ws.provinciacoordenadas.cliente.ProvinciaCoordenadasCallService;
+import pe.gob.mimp.siscap.ws.rendimiento.cliente.RendimientoCallService;
+import pe.gob.mimp.util.EnumFuncionalidad;
 
 @ManagedBean
 @ViewScoped
 public class MapaAdministrado extends AdministradorAbstracto implements Serializable {
+
+    UsuarioAdministrado usuarioAdministrado = (UsuarioAdministrado) getFacesContext().getApplication().createValueBinding("#{usuarioAdministrado}").getValue(getFacesContext());
+    @Inject
+    private RendimientoCallService rendimientoCallService;
 
     private MapModel modelo;
     private Marker marcadorSeleccionado;
@@ -174,6 +182,8 @@ public class MapaAdministrado extends AdministradorAbstracto implements Serializ
     }
 
     public void cargarPoligonosDepartamentos() {
+        long startTime = System.currentTimeMillis();
+
         DepartamentoAdministrado departamentoAdministrado = (DepartamentoAdministrado) getFacesContext().getApplication().createValueBinding("#{departamentoAdministrado}").getValue(getFacesContext());
         try {
             if (false == this.poligonosCargados) {
@@ -201,7 +211,14 @@ public class MapaAdministrado extends AdministradorAbstracto implements Serializ
             } else {
                 Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.INFO, "{0}Ya se han cargado los poligonos", Util.tiempo());
             }
-
+            long stopTime = System.currentTimeMillis();
+            rendimientoCallService.crearRendimiento(
+                    SiscapWebUtil.crearRendimiento(
+                            Thread.currentThread().getStackTrace()[1].getMethodName(),
+                            EnumFuncionalidad.ACTIVIDADES.getNidFuncionalidadBigInteger(),
+                            SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                            usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+            );
             //cambiarSeleccionDepartamentoProvinciaDistrito();  
         } catch (Exception e) {
             adicionarMensaje("cargarDepartamentos", e.getMessage());
@@ -209,6 +226,7 @@ public class MapaAdministrado extends AdministradorAbstracto implements Serializ
     }
 
     public List<String> departamentosLista() {
+        long startTime = System.currentTimeMillis();
         List<String> lista = new ArrayList<>();
         List<Departamento> departamento = new ArrayList<>();
         String valor = "";
@@ -222,6 +240,14 @@ public class MapaAdministrado extends AdministradorAbstracto implements Serializ
                 }
                 Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.INFO, "{0}Correcto", Util.tiempo());
             }
+            long stopTime = System.currentTimeMillis();
+            rendimientoCallService.crearRendimiento(
+                    SiscapWebUtil.crearRendimiento(
+                            Thread.currentThread().getStackTrace()[1].getMethodName(),
+                            EnumFuncionalidad.ACTIVIDADES.getNidFuncionalidadBigInteger(),
+                            SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                            usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+            );
         } catch (Exception e) {
 
             Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.SEVERE, null, e);

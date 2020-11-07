@@ -24,14 +24,21 @@ import pe.gob.mimp.seguridad.administrado.UsuarioAdministrado;
 import pe.gob.mimp.siscap.modelo.ActividadGobResultado;
 import pe.gob.mimp.siscap.modelo.NivelEvaluacion;
 import pe.gob.mimp.siscap.modelo.TipoEvaluacion;
+import pe.gob.mimp.siscap.util.SiscapWebUtil;
 import pe.gob.mimp.siscap.ws.actividadgr.cliente.ActividadGRCallService;
 import pe.gob.mimp.siscap.ws.nivelevaluacion.cliente.NivelEvaluacionCallService;
+import pe.gob.mimp.siscap.ws.rendimiento.cliente.RendimientoCallService;
 import pe.gob.mimp.siscap.ws.tipoevaluacion.cliente.TipoEvaluacionCallService;
+import pe.gob.mimp.util.EnumFuncionalidad;
 import pe.gob.mimp.utils.Funciones;
 
 @ManagedBean
 @ViewScoped
 public class ActividadGRAdministrado extends AdministradorAbstracto implements Serializable {
+
+    UsuarioAdministrado usuarioAdministrado = (UsuarioAdministrado) getFacesContext().getApplication().createValueBinding("#{usuarioAdministrado}").getValue(getFacesContext());
+    @Inject
+    private RendimientoCallService rendimientoCallService;
 
     private Logger logger = Logger.getLogger(ActividadGobResultado.class.getName());
     private static final long serialVersionUID = 1L;
@@ -108,13 +115,23 @@ public class ActividadGRAdministrado extends AdministradorAbstracto implements S
 
     public void obtenerEvaluacionByTipoEvaluacion(AjaxBehaviorEvent e) throws Exception {
         logger.info(":: ActividadGRAdministrado.obtenerEvaluacionByTipoEvaluacion :: Starting execution...");
+        long startTime = System.currentTimeMillis();
         this.entidadSeleccionada.setNidNivelEvaluacion(null);
         this.nivelEvaluacionList = null;
         loadEvaluacionList();
+        long stopTime = System.currentTimeMillis();
+        rendimientoCallService.crearRendimiento(
+                SiscapWebUtil.crearRendimiento(
+                        Thread.currentThread().getStackTrace()[1].getMethodName(),
+                        EnumFuncionalidad.ACTIVIDADES.getNidFuncionalidadBigInteger(),
+                        SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                        usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+        );
         logger.info(":: ActividadGRAdministrado.obtenerEvaluacionByTipoEvaluacion :: Execution finish.");
     }
 
-    private void loadEvaluacionList() {
+    private void loadEvaluacionList() throws Exception {
+        long startTime = System.currentTimeMillis();
         TipoEvaluacion tipoEvaluacion = tipoEvaluacionCallService.find(this.entidadSeleccionada.getNidTipoEvaluacion());
         if (!Funciones.esVacio(tipoEvaluacion)) {
 
@@ -128,6 +145,14 @@ public class ActividadGRAdministrado extends AdministradorAbstracto implements S
             this.nivelEvaluacionList = nivelEvaluacionCallService.loadNivelEvaluacionList(findByParamBean);
             logger.log(Level.INFO, " Funcion transferida {0}", this.nivelEvaluacionList);
         }
+        long stopTime = System.currentTimeMillis();
+        rendimientoCallService.crearRendimiento(
+                SiscapWebUtil.crearRendimiento(
+                        Thread.currentThread().getStackTrace()[1].getMethodName(),
+                        EnumFuncionalidad.ACTIVIDADES.getNidFuncionalidadBigInteger(),
+                        SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                        usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+        );
     }
 
     public boolean validarFormulario() {
@@ -194,6 +219,7 @@ public class ActividadGRAdministrado extends AdministradorAbstracto implements S
 
     public void loadActividadGRAList() {
         logger.info(":: ActividadGRAdministrado.loadActividadGRAList :: Starting execution...");
+        long startTime = System.currentTimeMillis();
         try {
             ActividadGobAdministrado actividadGobAdministrado = (ActividadGobAdministrado) getFacesContext().getApplication().createValueBinding("#{actividadGobAdministrado}").getValue(getFacesContext());
 
@@ -205,6 +231,15 @@ public class ActividadGRAdministrado extends AdministradorAbstracto implements S
             findByParamBean.setParameters(parameters);
             findByParamBean.setOrderBy("nidActividadGobResultado");
             actividadGobAdministrado.actividadGRList = actividadGRCallService.loadActividadGRList(findByParamBean);
+            
+            long stopTime = System.currentTimeMillis();
+            rendimientoCallService.crearRendimiento(
+                    SiscapWebUtil.crearRendimiento(
+                            Thread.currentThread().getStackTrace()[1].getMethodName(),
+                            EnumFuncionalidad.ACTIVIDADES.getNidFuncionalidadBigInteger(),
+                            SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                            usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+            );
         } catch (Exception e) {
             Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.INFO, "Error loadActividadGRAList" + e.getMessage(), Util.tiempo());
         }

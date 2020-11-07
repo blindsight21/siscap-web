@@ -1,0 +1,117 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:c="http://java.sun.com/jsp/jstl/core"
+                template="/WEB-INF/templates/default.xhtml">
+    <ui:define name="header">
+        <style>
+            .fondonegro .ui-grid-row {
+                background-color: #5a5a5a !important;
+                margin-bottom: 0px !important;
+            }
+        </style>
+    </ui:define>
+    <ui:define name="content" >
+        <div class="pcenter">
+            <p:outputLabel value="REPORTE DEL INDICADOR RENDIMIENTO" class="ptextGradient pred pbold ptitle"/>
+        </div>
+        <!--<h:form>            
+            <p:remoteCommand name="growl" actionListener="# {rendimientoAdministrado.limpiarReporte()}" update="@(.formularioPrincipal) @(.filtrosRep) @(.tablaRendimiento)" autoRun="true"/>
+        </h:form>-->
+        <p:spacer/>
+
+        <script type="text/javascript">
+            function start() {
+                PF('statusDialog').show();
+            }
+
+            function stop() {
+                PF('statusDialog').hide();
+            }
+        </script>
+        <h:form id="formularioPrincipal">            
+            <p:growl id="mensajes" showDetail="true" life="#{parametroSiscapAdministrado.tiempoAlertas()}"/>
+
+            <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+                <p:commandButton value="Si" type="button" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" />
+                <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="ui-icon-close" />
+            </p:confirmDialog>
+
+            <p:fieldset legend="Filtros/Opciones:" style="padding: 1em; margin-bottom:0.5em;">
+                <p:panelGrid columns="6" columnClasses="ui-grid-col-2,ui-grid-col-2,ui-grid-col-3,ui-grid-col-3,ui-grid-col-1,ui-grid-col-1" layout="grid" class="pnoborder">
+                    <p:outputLabel value="" class="pfloatL"/>
+                    <p:outputLabel value=""/>
+                    <p:outputLabel value=""/>
+                    <p:outputLabel value=""/>
+                    <p:commandButton value="Limpiar"                          
+                                     action="#{rendimientoAdministrado.limpiarRendimiento()}"                                     
+                                     title="Limpiar" class="pfloatR" update="@(.filtrosRep) @(.tablaRendimiento)"/>
+
+                    <p:commandButton value="Actualizar"                                     
+                                     action="#{rendimientoAdministrado.loadRendimientoList()}"
+                                     immediate="true"
+                                     title="Actualizar" class="pfloatR" update="@(.tablaRendimiento)"/>
+                </p:panelGrid>
+            </p:fieldset>
+            <p:panelGrid columns="1" columnClasses="ui-grid-col-12" layout="grid" class="pnoborder pListadoReporte">
+                <p:dataTable
+                    id="tablaRendimiento"
+                    class="tablaRendimiento"
+                    widgetVar="tablaRendimiento"
+                    value="#{rendimientoAdministrado.rendimientoList}"
+                    var="itemRendimiento"
+                    rows="10"
+                    paginator="true" 
+                    paginatorPosition="bottom"
+                    rowsPerPageTemplate="10,15,20"
+                    currentPageReportTemplate="Mostrando {startRecord}-{endRecord} de {totalRecords}"
+                    paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}
+                    #{rendimientoAdministrado.rendimientoList.size() eq 0 ? '':'{Exporters}'}">                  
+
+                    <c:choose>
+                        <c:when test="#{rendimientoAdministrado.rendimientoList.size() eq 0}">
+                        </c:when>
+                        <c:otherwise>
+                            <f:facet name="{Exporters}" >
+                                <h:commandLink class="pfloatR" disabled="#{!usuarioAdministrado.usuarioActivoEsAdministrador(usuarioAdministrado.entidadSeleccionada)}">
+                                    <p:graphicImage name="imagen/xls.png" width="24"/>
+                                    <p:dataExporter type="xls" target="tablaRendimiento" fileName="Consolidado"/>
+                                </h:commandLink>
+                            </f:facet>
+                        </c:otherwise>
+                    </c:choose>
+                    <p:column headerText="ITEM" width="20%" class="pcenter">
+                        <p:outputLabel value="#{itemRendimiento.item}"/>
+                    </p:column>
+                    <p:column headerText="MODULO" width="150%" filterMatchMode="contains" filterBy="#{itemRendimiento.modulo}">
+                        <p:outputLabel value="#{itemRendimiento.modulo}"/>
+                    </p:column>
+                    <p:column headerText="NUMERO DE TAREAS REALIZADAS" width="30%" class="pcenter">
+                        <p:outputLabel value="#{itemRendimiento.numeroTareasRealizadas}"/>
+                    </p:column>
+                    <p:column headerText="TIEMPO DE OBSERVACION (HORAS)" width="30%" class="pcenter">
+                        <p:outputLabel value="#{itemRendimiento.tiempoObservacion}"/>
+                    </p:column>
+                    <p:column headerText="T" width="40%" class="pcenter">
+                        <p:outputLabel value="#{itemRendimiento.porcentajeRendimiento}"/>
+                    </p:column>
+                </p:dataTable>
+            </p:panelGrid>
+        </h:form>
+
+        <!--        <p:dialog modal="false" id="dialogoReporteActividad" widgetVar="dialogoReporteActividad" header="Grafico" closable="true" closeOnEscape="true"
+                          resizable="false" width="900px" height="600px" dynamic="true">                  
+                    <h:form>
+                        <ui:include src="../panelReporteActividad.xhtml">
+                            <ui:param name="prefijo" value="verGrafico"/>
+                        </ui:include>
+                        <p:spacer/>
+                        <p:panelGrid columns="1" columnClasses="ui-grid-col-12" layout="grid" class="pnoborder">
+                            <p:commandButton value="Cerrar" onclick="PF('dialogoReporteActividad').hide();" type="button" icon="ui-icon-cancel" title="Cierra el dialogo" class="pfloatR"/>
+                        </p:panelGrid>
+                    </h:form>    
+                </p:dialog>-->
+    </ui:define>
+</ui:composition>

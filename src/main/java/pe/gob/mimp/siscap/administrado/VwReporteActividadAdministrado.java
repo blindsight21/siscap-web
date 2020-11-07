@@ -19,13 +19,21 @@ import org.primefaces.model.chart.BarChartModel;
 import org.primefaces.model.chart.ChartSeries;
 import pe.gob.mimp.bean.FindByParamBean;
 import pe.gob.mimp.core.Util;
+import pe.gob.mimp.seguridad.administrado.UsuarioAdministrado;
 import pe.gob.mimp.siscap.modelo.VwReporteActividad;
+import pe.gob.mimp.siscap.util.SiscapWebUtil;
+import pe.gob.mimp.siscap.ws.rendimiento.cliente.RendimientoCallService;
 import pe.gob.mimp.siscap.ws.vwreporteactividad.cliente.VwReporteActividadCallService;
+import pe.gob.mimp.util.EnumFuncionalidad;
 
 @SuppressWarnings("serial")
 @ManagedBean
 @ViewScoped
 public class VwReporteActividadAdministrado extends AdministradorAbstracto implements Serializable {
+
+    UsuarioAdministrado usuarioAdministrado = (UsuarioAdministrado) getFacesContext().getApplication().createValueBinding("#{usuarioAdministrado}").getValue(getFacesContext());
+    @Inject
+    private RendimientoCallService rendimientoCallService;
 
     private Logger logger = Logger.getLogger(VwReporteActividad.class.getName());
 
@@ -134,7 +142,9 @@ public class VwReporteActividadAdministrado extends AdministradorAbstracto imple
 
      return modeloBarraPublico;
      }*/
-    public BarChartModel generarGraficoEstado() {
+    public BarChartModel generarGraficoEstado() throws Exception {
+        
+        long startTime = System.currentTimeMillis();
         modeloBarraEstado = new BarChartModel();
 
         generarEstado();
@@ -142,6 +152,14 @@ public class VwReporteActividadAdministrado extends AdministradorAbstracto imple
         modeloBarraEstado.setLegendPosition("ne");
         modeloBarraEstado.setShowDatatip(false);
 
+        long stopTime = System.currentTimeMillis();
+        rendimientoCallService.crearRendimiento(
+                SiscapWebUtil.crearRendimiento(
+                        Thread.currentThread().getStackTrace()[1].getMethodName(),
+                        EnumFuncionalidad.REPORTE.getNidFuncionalidadBigInteger(),
+                        SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                        usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+        );
         return modeloBarraEstado;
     }
 
@@ -156,7 +174,9 @@ public class VwReporteActividadAdministrado extends AdministradorAbstracto imple
         return modeloBarraTipoObjetivo;
     }
 
-    public BarChartModel generarGraficoProfesional() {
+    public BarChartModel generarGraficoProfesional() throws Exception {
+
+        long startTime = System.currentTimeMillis();
         modeloBarraProfesional = new BarChartModel();
 
         generarProfesional();
@@ -164,11 +184,20 @@ public class VwReporteActividadAdministrado extends AdministradorAbstracto imple
         modeloBarraProfesional.setLegendPosition("ne");
         modeloBarraProfesional.setShowDatatip(false);
 
+        long stopTime = System.currentTimeMillis();
+        rendimientoCallService.crearRendimiento(
+                SiscapWebUtil.crearRendimiento(
+                        Thread.currentThread().getStackTrace()[1].getMethodName(),
+                        EnumFuncionalidad.REPORTE.getNidFuncionalidadBigInteger(),
+                        SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                        usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+        );
         return modeloBarraProfesional;
     }
 
     public void generarTrimestre() {
 
+        long startTime = System.currentTimeMillis();
         this.modeloBarraTrimestre = new BarChartModel();
 
         int itrimestre1 = 0;
@@ -236,6 +265,14 @@ public class VwReporteActividadAdministrado extends AdministradorAbstracto imple
             this.modeloBarraTrimestre.setShowDatatip(false);
             this.modeloBarraTrimestre.setShowPointLabels(true);
 
+            long stopTime = System.currentTimeMillis();
+            rendimientoCallService.crearRendimiento(
+                    SiscapWebUtil.crearRendimiento(
+                            Thread.currentThread().getStackTrace()[1].getMethodName(),
+                            EnumFuncionalidad.REPORTE.getNidFuncionalidadBigInteger(),
+                            SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                            usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+            );
         } catch (Exception e) {
 
             Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.SEVERE, null, e);
@@ -337,6 +374,7 @@ public class VwReporteActividadAdministrado extends AdministradorAbstracto imple
      }*/
     public void generarEstado() {
 
+        long startTime = System.currentTimeMillis();
         this.modeloBarraEstado = new BarChartModel();
 
         int ianulado = 0;
@@ -414,6 +452,14 @@ public class VwReporteActividadAdministrado extends AdministradorAbstracto imple
             this.modeloBarraEstado.setShowDatatip(false);
             this.modeloBarraEstado.setShowPointLabels(true);
 
+            long stopTime = System.currentTimeMillis();
+            rendimientoCallService.crearRendimiento(
+                    SiscapWebUtil.crearRendimiento(
+                            Thread.currentThread().getStackTrace()[1].getMethodName(),
+                            EnumFuncionalidad.REPORTE.getNidFuncionalidadBigInteger(),
+                            SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                            usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+            );
         } catch (Exception e) {
 
             Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.SEVERE, null, e);
@@ -422,6 +468,7 @@ public class VwReporteActividadAdministrado extends AdministradorAbstracto imple
 
     public void generarTipoObjetivo() {
 
+        long startTime = System.currentTimeMillis();
         this.modeloBarraTipoObjetivo = new BarChartModel();
 
         int idesempeno = 0;
@@ -469,6 +516,14 @@ public class VwReporteActividadAdministrado extends AdministradorAbstracto imple
             this.modeloBarraTipoObjetivo.setShowDatatip(false);
             this.modeloBarraTipoObjetivo.setShowPointLabels(true);
 
+            long stopTime = System.currentTimeMillis();
+            rendimientoCallService.crearRendimiento(
+                    SiscapWebUtil.crearRendimiento(
+                            Thread.currentThread().getStackTrace()[1].getMethodName(),
+                            EnumFuncionalidad.REPORTE.getNidFuncionalidadBigInteger(),
+                            SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                            usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+            );
         } catch (Exception e) {
 
             Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.SEVERE, null, e);
@@ -478,6 +533,7 @@ public class VwReporteActividadAdministrado extends AdministradorAbstracto imple
 
     public void generarProfesional() {
 
+        long startTime = System.currentTimeMillis();
         this.modeloBarraTipoObjetivo = new BarChartModel();
 
         int idesempeno = 0;
@@ -525,6 +581,14 @@ public class VwReporteActividadAdministrado extends AdministradorAbstracto imple
             this.modeloBarraTipoObjetivo.setShowDatatip(false);
             this.modeloBarraTipoObjetivo.setShowPointLabels(true);
 
+            long stopTime = System.currentTimeMillis();
+            rendimientoCallService.crearRendimiento(
+                    SiscapWebUtil.crearRendimiento(
+                            Thread.currentThread().getStackTrace()[1].getMethodName(),
+                            EnumFuncionalidad.REPORTE.getNidFuncionalidadBigInteger(),
+                            SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                            usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+            );
         } catch (Exception e) {
 
             Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.SEVERE, null, e);
@@ -541,6 +605,7 @@ public class VwReporteActividadAdministrado extends AdministradorAbstracto imple
 
     public void loadVwReporteActividadList() {
         logger.info(":: ActividadGobAdministrado.loadActividadGobList :: Starting execution...");
+        long startTime = System.currentTimeMillis();
         //ActividadGEAdministrado actividadGEAdministrado = (ActividadGEAdministrado) getFacesContext().getApplication().createValueBinding("#{actividadGEAdministrado}").getValue(getFacesContext());
         try {
             Map<String, Object> parameters = new HashMap<>();
@@ -566,6 +631,14 @@ public class VwReporteActividadAdministrado extends AdministradorAbstracto imple
             findByParamBean.setOrderBy("nidActividadGob");
             this.entidades = vwReporteActividadCallService.loadVwReporteActList(findByParamBean);
 
+            long stopTime = System.currentTimeMillis();
+            rendimientoCallService.crearRendimiento(
+                    SiscapWebUtil.crearRendimiento(
+                            Thread.currentThread().getStackTrace()[1].getMethodName(),
+                            EnumFuncionalidad.REPORTE.getNidFuncionalidadBigInteger(),
+                            SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                            usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+            );
         } catch (Exception e) {
             Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.INFO, "Error loadActividadGobList" + e.getMessage(), Util.tiempo());
         }

@@ -331,27 +331,30 @@ public class IdentificacionReniec {
 
             if (dni != null) {
                 if (dni.length() == 8) {
-                    String urlProxy = "https://192.168.4.42:8181/wb-proxy-ws-pide-sunat/server/getDataReniec?nroDni=" + dni;
+//                    String urlProxy = "https://192.168.4.42:8181/wb-proxy-ws-pide-sunat/server/getDataReniec?nroDni=" + dni;
+                    
+                    //URI servicio PIDE
+                    String urlProxy = "http://190.119.182.199:8080/wsService/faces/ConsultaReniec?nroDni=" + dni;
 
                     System.out.println("urlProxy:" + urlProxy);
                     try {
                         javax.net.ssl.HttpsURLConnection.setDefaultHostnameVerifier(
                                 new javax.net.ssl.HostnameVerifier() {
-                                    public boolean verify(String hostname,
-                                            javax.net.ssl.SSLSession sslSession) {
-                                        if (hostname.equals("192.168.4.42")) {
-                                            return true;
-                                        }
-                                        return false;
-                                    }
-                                });
+                            public boolean verify(String hostname,
+                                    javax.net.ssl.SSLSession sslSession) {
+                                if (hostname.equals("192.168.4.42")) {
+                                    return true;
+                                }
+                                return false;
+                            }
+                        });
 
                         URL url = new URL(urlProxy);
                         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                         conn.setUseCaches(false);
                         conn.setDoOutput(true);
                         conn.setRequestMethod("GET");
-                        conn.setRequestProperty("Content-Type", "application/json");                    
+                        conn.setRequestProperty("Content-Type", "application/json");
                         InputStream instream = conn.getInputStream();//add                        
                         BufferedReader in = new BufferedReader(new InputStreamReader(instream, "UTF-8"));
                         System.out.println("calling ws...");
@@ -372,7 +375,7 @@ public class IdentificacionReniec {
                             System.out.println("jsonObjReturnFB-datosPersona:" + jsonObjReturnFB.get("datosPersona"));
                             JSONObject jsonDataReturn = jsonObjReturnFB.getJSONObject("datosPersona");
                             this.COD_ERROR = jsonObjReturnFB.get("coResultado").toString();
-                            this.NOMBRES = jsonDataReturn.get("prenombres").toString();
+                            this.NOMBRES = jsonDataReturn.get("preNombres").toString();
                             this.APELLIDO_PATERNO = jsonDataReturn.get("apPrimer").toString();
                             this.APELLIDO_MATERNO = jsonDataReturn.get("apSegundo").toString();
                         }

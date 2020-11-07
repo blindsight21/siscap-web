@@ -39,8 +39,11 @@ import pe.gob.mimp.general.administrado.AdministradorAbstracto;
 import pe.gob.mimp.seguridad.administrado.UsuarioAdministrado;
 import pe.gob.mimp.siscap.modelo.ActividadGob;
 import pe.gob.mimp.siscap.modelo.ArchivoActividad;
+import pe.gob.mimp.siscap.util.SiscapWebUtil;
 import pe.gob.mimp.siscap.ws.archivoactividad.cliente.ArchivoActividadCallService;
 import pe.gob.mimp.siscap.ws.parametrosiscap.cliente.ParametroSiscapCallService;
+import pe.gob.mimp.siscap.ws.rendimiento.cliente.RendimientoCallService;
+import pe.gob.mimp.util.EnumFuncionalidad;
 
 /**
  *
@@ -50,13 +53,17 @@ import pe.gob.mimp.siscap.ws.parametrosiscap.cliente.ParametroSiscapCallService;
 @ApplicationScoped
 public class FileUploadViewAdministrado extends AdministradorAbstracto implements Serializable {
 
+    UsuarioAdministrado usuarioAdministrado = (UsuarioAdministrado) getFacesContext().getApplication().createValueBinding("#{usuarioAdministrado}").getValue(getFacesContext());
+    @Inject
+    private RendimientoCallService rendimientoCallService;
+
     private Logger logger = Logger.getLogger(ArchivoActividad.class.getName());
     private static final long serialVersionUID = 1L;
 
     private ArchivoActividad entidadSeleccionada;
 
     private StreamedContent lecturaPDF;
-    
+
     //BD
     private List<ArchivoActividad> archivoActividadList;
     public List<ArchivoActividad> archivoAsistenciaList;
@@ -78,7 +85,7 @@ public class FileUploadViewAdministrado extends AdministradorAbstracto implement
     public void setLecturaPDF(StreamedContent lecturaPDF) {
         this.lecturaPDF = lecturaPDF;
     }
-    
+
     public ArchivoActividad getEntidadSeleccionada() {
         return entidadSeleccionada;
     }
@@ -103,7 +110,8 @@ public class FileUploadViewAdministrado extends AdministradorAbstracto implement
         this.archivoAsistenciaList = archivoAsistenciaList;
     }
 
-    public void handleFileUpload(FileUploadEvent event) throws IOException {
+    public void handleFileUpload(FileUploadEvent event) throws IOException, Exception {
+        long startTime = System.currentTimeMillis();
         String correlativo;// si es que se quiere agregar un correlativo al archivo
         ActividadGobAdministrado actividadGobAdministrado = (ActividadGobAdministrado) getFacesContext().getApplication().createValueBinding("#{actividadGobAdministrado}").getValue(getFacesContext());
         if (validarArchivo()) {
@@ -145,9 +153,18 @@ public class FileUploadViewAdministrado extends AdministradorAbstracto implement
                 adicionarMensajeWarning("Advertencia", "El archivo ya existe. Se ha sobreescrito el archivo");
             }
         }
+        long stopTime = System.currentTimeMillis();
+        rendimientoCallService.crearRendimiento(
+                SiscapWebUtil.crearRendimiento(
+                        Thread.currentThread().getStackTrace()[1].getMethodName(),
+                        EnumFuncionalidad.ACTIVIDADES.getNidFuncionalidadBigInteger(),
+                        SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                        usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+        );
     }
 
-    public Boolean validarArchivo() {
+    public Boolean validarArchivo() throws Exception {
+        long startTime = System.currentTimeMillis();
         Boolean rpta = true;
 
         ActividadGobAdministrado actividadGobAdministrado = (ActividadGobAdministrado) getFacesContext().getApplication().createValueBinding("#{actividadGobAdministrado}").getValue(getFacesContext());
@@ -160,6 +177,14 @@ public class FileUploadViewAdministrado extends AdministradorAbstracto implement
         if (count > 0) {
             rpta = enviarWarnMessage("Ya existe un archivo registrado.");
         }
+        long stopTime = System.currentTimeMillis();
+        rendimientoCallService.crearRendimiento(
+                SiscapWebUtil.crearRendimiento(
+                        Thread.currentThread().getStackTrace()[1].getMethodName(),
+                        EnumFuncionalidad.ACTIVIDADES.getNidFuncionalidadBigInteger(),
+                        SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                        usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+        );
         return rpta;
     }
 
@@ -181,6 +206,7 @@ public class FileUploadViewAdministrado extends AdministradorAbstracto implement
     }
 
     public void crearArchivoActividadDB(ActividadGob nidActividadGob, String nombreArchivo, String url) {
+        long startTime = System.currentTimeMillis();
         UsuarioAdministrado usuarioAdministrado = (UsuarioAdministrado) getFacesContext().getApplication().createValueBinding("#{usuarioAdministrado}").getValue(getFacesContext());
         try {
             ArchivoActividad nuevoArchivo = new ArchivoActividad();
@@ -200,11 +226,20 @@ public class FileUploadViewAdministrado extends AdministradorAbstracto implement
                 loadArchivoAsistenciaList();
             }
 
+            long stopTime = System.currentTimeMillis();
+            rendimientoCallService.crearRendimiento(
+                    SiscapWebUtil.crearRendimiento(
+                            Thread.currentThread().getStackTrace()[1].getMethodName(),
+                            EnumFuncionalidad.ACTIVIDADES.getNidFuncionalidadBigInteger(),
+                            SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                            usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+            );
         } catch (Exception e) {
         }
     }
 
     public void anularArchivoActividadDB(ArchivoActividad entidadSeleccionada) {
+        long startTime = System.currentTimeMillis();
         try {
 
             UsuarioAdministrado usuarioAdministrado = (UsuarioAdministrado) getFacesContext().getApplication().createValueBinding("#{usuarioAdministrado}").getValue(getFacesContext());
@@ -217,11 +252,20 @@ public class FileUploadViewAdministrado extends AdministradorAbstracto implement
             archivoActividadCallService.editarArchivoActividad(entidadSeleccionada);
             loadArchivoAsistenciaList();
 
+            long stopTime = System.currentTimeMillis();
+            rendimientoCallService.crearRendimiento(
+                    SiscapWebUtil.crearRendimiento(
+                            Thread.currentThread().getStackTrace()[1].getMethodName(),
+                            EnumFuncionalidad.ACTIVIDADES.getNidFuncionalidadBigInteger(),
+                            SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                            usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+            );
         } catch (Exception e) {
         }
     }
 
-    public void anularArchivoAsistencia(ArchivoActividad entidadSeleccionada) throws IOException {
+    public void anularArchivoAsistencia(ArchivoActividad entidadSeleccionada) throws IOException, Exception {
+        long startTime = System.currentTimeMillis();
         if (null != entidadSeleccionada) {
             /*ruta windows prueba*/
             //String rutaWindows = "C:\\glassfish\\siscap";
@@ -238,10 +282,20 @@ public class FileUploadViewAdministrado extends AdministradorAbstracto implement
         } else {
             adicionarMensajeWarning("Advertencia", "No se puede eliminar el archivo. El pámetro no se obtuvo o se encuentra vacio");
         }
+
+        long stopTime = System.currentTimeMillis();
+        rendimientoCallService.crearRendimiento(
+                SiscapWebUtil.crearRendimiento(
+                        Thread.currentThread().getStackTrace()[1].getMethodName(),
+                        EnumFuncionalidad.ACTIVIDADES.getNidFuncionalidadBigInteger(),
+                        SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                        usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+        );
     }
 
-    public void loadArchivoAsistenciaList() {
+    public void loadArchivoAsistenciaList() throws Exception {
         logger.info(":: FileUploadViewAdministrado.loadActividadGobList :: Starting execution...");
+        long startTime = System.currentTimeMillis();
         try {
             ActividadGobAdministrado actividadGobAdministrado = (ActividadGobAdministrado) getFacesContext().getApplication().createValueBinding("#{actividadGobAdministrado}").getValue(getFacesContext());
             Map<String, Object> parameters = new HashMap<>();
@@ -252,10 +306,19 @@ public class FileUploadViewAdministrado extends AdministradorAbstracto implement
         } catch (Exception e) {
             Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.INFO, "Error loadActividadGobList" + e.getMessage(), Util.tiempo());
         }
+        long stopTime = System.currentTimeMillis();
+        rendimientoCallService.crearRendimiento(
+                SiscapWebUtil.crearRendimiento(
+                        Thread.currentThread().getStackTrace()[1].getMethodName(),
+                        EnumFuncionalidad.ACTIVIDADES.getNidFuncionalidadBigInteger(),
+                        SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                        usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+        );
         logger.info(":: ActividadGobAdministrado.loadActividadGobList :: Execution finish.");
     }
-    
+
     public void obtenerPDF(String nombreArchivo) {
+        long startTime = System.currentTimeMillis();
         this.lecturaPDF = new ByteArrayContent(null, "application/pdf");
         //setLecturaPDF(null);
         try {
@@ -275,6 +338,14 @@ public class FileUploadViewAdministrado extends AdministradorAbstracto implement
             } else {
                 System.out.println("obtenerPDF: No se recibió el archivo PDF");
             }
+            long stopTime = System.currentTimeMillis();
+            rendimientoCallService.crearRendimiento(
+                    SiscapWebUtil.crearRendimiento(
+                            Thread.currentThread().getStackTrace()[1].getMethodName(),
+                            EnumFuncionalidad.ACTIVIDADES.getNidFuncionalidadBigInteger(),
+                            SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                            usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+            );
         } catch (Exception e) {
             System.out.println("obtenerPDF: " + e.getMessage());
         }
@@ -283,7 +354,7 @@ public class FileUploadViewAdministrado extends AdministradorAbstracto implement
     public String generateRandomIdForNotCaching() {
         return java.util.UUID.randomUUID().toString();
     }
-    
+
     
 
     /*public void loadArchivoAsistenciaList() {

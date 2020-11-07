@@ -26,16 +26,23 @@ import pe.gob.mimp.general.modelo.Distrito;
 import pe.gob.mimp.general.modelo.Provincia;
 import pe.gob.mimp.siscap.modelo.Gobierno;
 import pe.gob.mimp.siscap.modelo.TipoGobierno;
+import pe.gob.mimp.siscap.util.SiscapWebUtil;
 import pe.gob.mimp.siscap.ws.departamento.cliente.DepartamentoCallService;
 import pe.gob.mimp.siscap.ws.distrito.cliente.DistritoCallService;
 import pe.gob.mimp.siscap.ws.gobierno.cliente.GobiernoCallService;
 import pe.gob.mimp.siscap.ws.provincia.cliente.ProvinciaCallService;
+import pe.gob.mimp.siscap.ws.rendimiento.cliente.RendimientoCallService;
 import pe.gob.mimp.siscap.ws.tipogobierno.cliente.TipoGobiernoCallService;
+import pe.gob.mimp.util.EnumFuncionalidad;
 import pe.gob.mimp.utils.Funciones;
 
 @ManagedBean
 @ViewScoped
 public class GobiernoAdministrado extends AdministradorAbstracto implements Serializable {
+
+    UsuarioAdministrado usuarioAdministrado = (UsuarioAdministrado) getFacesContext().getApplication().createValueBinding("#{usuarioAdministrado}").getValue(getFacesContext());
+    @Inject
+    private RendimientoCallService rendimientoCallService;
 
     private Logger logger = Logger.getLogger(Gobierno.class.getName());
     private static final long serialVersionUID = 1L;
@@ -66,6 +73,8 @@ public class GobiernoAdministrado extends AdministradorAbstracto implements Seri
     @PostConstruct
     public void initBean() {
         logger.info(":: GobiernoAdministrado.initBean :: Starting execution...");
+
+        long startTime = System.currentTimeMillis();
         try {
             this.entidadSeleccionada = new Gobierno();
             this.entidadSeleccionada.setNidTipoGobierno(new TipoGobierno());
@@ -78,6 +87,15 @@ public class GobiernoAdministrado extends AdministradorAbstracto implements Seri
             findByParamBean.setOrderBy("nidTipoGobierno");
             this.tipoGobiernoList = tipoGobiernoCallService.loadTipoGobiernoList(findByParamBean);
             this.departamentoList = departamentoCallService.obtenerActivos();
+
+            long stopTime = System.currentTimeMillis();
+            rendimientoCallService.crearRendimiento(
+                    SiscapWebUtil.crearRendimiento(
+                            Thread.currentThread().getStackTrace()[1].getMethodName(),
+                            EnumFuncionalidad.GOBIERNO.getNidFuncionalidadBigInteger(),
+                            SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                            usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+            );
 
         } catch (Exception e) {
             Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.INFO, "Error method initBean" + e.getMessage(), Util.tiempo());
@@ -134,10 +152,25 @@ public class GobiernoAdministrado extends AdministradorAbstracto implements Seri
     }
 
     public Gobierno getEntidad(String id) {
+        long startTime = System.currentTimeMillis();
         Gobierno gobierno = null;
 
-        if ((null != id) || (false == id.equals(""))) {
-            gobierno = gobiernoCallService.find(new BigDecimal(id));
+        try {
+
+            if ((null != id) || (false == id.equals(""))) {
+                gobierno = gobiernoCallService.find(new BigDecimal(id));
+            }
+            long stopTime = System.currentTimeMillis();
+            rendimientoCallService.crearRendimiento(
+                    SiscapWebUtil.crearRendimiento(
+                            Thread.currentThread().getStackTrace()[1].getMethodName(),
+                            EnumFuncionalidad.GOBIERNO.getNidFuncionalidadBigInteger(),
+                            SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                            usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+            );
+
+        } catch (Exception e) {
+            Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.INFO, "{0}Obtener Gobierno" + e.getMessage(), Util.tiempo());
         }
         return gobierno;
     }
@@ -163,44 +196,81 @@ public class GobiernoAdministrado extends AdministradorAbstracto implements Seri
 
     public void obtenerProvinciaByDepartamentoId(AjaxBehaviorEvent e) throws Exception {
         logger.info(":: GobiernoAdministrado.obtenerProvinciaByDepartamentoId() :: Starting execution...");
+        long startTime = System.currentTimeMillis();
         this.entidadSeleccionada.setNidProvincia(null);
         this.provinciaList = null;
         this.entidadSeleccionada.setNidDistrito(null);
         this.distritoList = null;
         loadProvinciaList();
+        long stopTime = System.currentTimeMillis();
+        rendimientoCallService.crearRendimiento(
+                SiscapWebUtil.crearRendimiento(
+                        Thread.currentThread().getStackTrace()[1].getMethodName(),
+                        EnumFuncionalidad.GOBIERNO.getNidFuncionalidadBigInteger(),
+                        SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                        usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+        );
         logger.info(":: GobiernoAdministrado.obtenerProvinciaByDepartamentoId() :: Execution finish.");
     }
 
     public void obtenerDistritoByProvinciaId(AjaxBehaviorEvent e) throws Exception {
         logger.info(":: BeneficenciaMB.obtenerDistritoByProvinciaId :: Starting execution...");
+        long startTime = System.currentTimeMillis();
         this.entidadSeleccionada.setNidDistrito(null);
         this.distritoList = null;
         loadDistritoList();
+        long stopTime = System.currentTimeMillis();
+        rendimientoCallService.crearRendimiento(
+                SiscapWebUtil.crearRendimiento(
+                        Thread.currentThread().getStackTrace()[1].getMethodName(),
+                        EnumFuncionalidad.GOBIERNO.getNidFuncionalidadBigInteger(),
+                        SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                        usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+        );
         logger.info(":: BeneficenciaMB.obtenerDistritoByProvinciaId :: Execution finish.");
     }
 
-    private void loadProvinciaList() {
+    private void loadProvinciaList() throws Exception {
+        long startTime = System.currentTimeMillis();
         BigDecimal departamentoId = this.entidadSeleccionada.getNidDepartamento();
         if (!Funciones.esVacio(departamentoId)) {
             Departamento departamento = departamentoCallService.find(departamentoId);
-            if (!Funciones.esVacio(departamento)) {                
+            if (!Funciones.esVacio(departamento)) {
                 this.provinciaList = provinciaCallService.obtenerProvincias(departamento);
             }
         }
+        long stopTime = System.currentTimeMillis();
+        rendimientoCallService.crearRendimiento(
+                SiscapWebUtil.crearRendimiento(
+                        Thread.currentThread().getStackTrace()[1].getMethodName(),
+                        EnumFuncionalidad.GOBIERNO.getNidFuncionalidadBigInteger(),
+                        SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                        usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+        );
     }
 
-    private void loadDistritoList() {
+    private void loadDistritoList() throws Exception {
+        long startTime = System.currentTimeMillis();
         BigDecimal provinciaId = this.entidadSeleccionada.getNidProvincia();
         if (!Funciones.esVacio(provinciaId)) {
             Provincia provincia = provinciaCallService.find(provinciaId);
-            if (!Funciones.esVacio(provincia)) {                
+            if (!Funciones.esVacio(provincia)) {
                 this.distritoList = distritoCallService.obtenerDistritos(provincia);
                 logger.log(Level.INFO, " distritos {0}", this.distritoList);
             }
         }
+        long stopTime = System.currentTimeMillis();
+        rendimientoCallService.crearRendimiento(
+                SiscapWebUtil.crearRendimiento(
+                        Thread.currentThread().getStackTrace()[1].getMethodName(),
+                        EnumFuncionalidad.GOBIERNO.getNidFuncionalidadBigInteger(),
+                        SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                        usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+        );
     }
 
     public boolean validarFormulario(boolean isNuevo) {
+        long startTime = System.currentTimeMillis();
         try {
             if (Funciones.esVacio(this.entidadSeleccionada.getTxtGobierno().toUpperCase())) {
                 return enviarWarnMessage("Ingrese el Descripción.");
@@ -231,6 +301,14 @@ public class GobiernoAdministrado extends AdministradorAbstracto implements Seri
             if (Funciones.esVacio(this.entidadSeleccionada.getNidDistrito())) {
                 return enviarWarnMessage("Seleccione el Distrito");
             }
+            long stopTime = System.currentTimeMillis();
+            rendimientoCallService.crearRendimiento(
+                    SiscapWebUtil.crearRendimiento(
+                            Thread.currentThread().getStackTrace()[1].getMethodName(),
+                            EnumFuncionalidad.GOBIERNO.getNidFuncionalidadBigInteger(),
+                            SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                            usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+            );
             return true;
         } catch (Exception e) {
             Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.INFO, "Error validarFormulario" + e.getMessage(), Util.tiempo());
@@ -245,6 +323,7 @@ public class GobiernoAdministrado extends AdministradorAbstracto implements Seri
 
     public void crearGobierno() {
         logger.info(":: GobiernoAdministrado.crearGobierno() :: Starting execution...");
+        long startTime = System.currentTimeMillis();
         if (validarFormulario(true)) {
             try {
                 UsuarioAdministrado usuarioAdministrado = (UsuarioAdministrado) getFacesContext().getApplication().createValueBinding("#{usuarioAdministrado}").getValue(getFacesContext());
@@ -261,11 +340,19 @@ public class GobiernoAdministrado extends AdministradorAbstracto implements Seri
                 gobiernoCallService.crearGobierno(gobierno);
 
 //                if (null != gobierno.getNidGobierno()) {
-                    // Update List Browser
-                    loadGobiernoList();
-                    RequestContext.getCurrentInstance().execute("PF('dialogoNuevoGobierno').hide()");
+                // Update List Browser
+                loadGobiernoList();
+                RequestContext.getCurrentInstance().execute("PF('dialogoNuevoGobierno').hide()");
 //                }
 
+                long stopTime = System.currentTimeMillis();
+                rendimientoCallService.crearRendimiento(
+                        SiscapWebUtil.crearRendimiento(
+                                Thread.currentThread().getStackTrace()[1].getMethodName(),
+                                EnumFuncionalidad.GOBIERNO.getNidFuncionalidadBigInteger(),
+                                SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                                usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+                );
             } catch (Exception e) {
                 Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.INFO, "Error crearGobierno" + e.getMessage(), Util.tiempo());
             }
@@ -275,6 +362,7 @@ public class GobiernoAdministrado extends AdministradorAbstracto implements Seri
 
     public void editarGobierno(Gobierno entidadSeleccionada) {
         logger.info(":: GobiernoAdministrado.editarGobierno() :: Starting execution...");
+        long startTime = System.currentTimeMillis();
         if (validarFormulario(false)) {
             try {
                 UsuarioAdministrado usuarioAdministrado = (UsuarioAdministrado) getFacesContext().getApplication().createValueBinding("#{usuarioAdministrado}").getValue(getFacesContext());
@@ -288,6 +376,14 @@ public class GobiernoAdministrado extends AdministradorAbstracto implements Seri
                     loadGobiernoList();
                     RequestContext.getCurrentInstance().execute("PF('dialogoEditarGobierno').hide()");
                 }
+                long stopTime = System.currentTimeMillis();
+                rendimientoCallService.crearRendimiento(
+                        SiscapWebUtil.crearRendimiento(
+                                Thread.currentThread().getStackTrace()[1].getMethodName(),
+                                EnumFuncionalidad.GOBIERNO.getNidFuncionalidadBigInteger(),
+                                SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                                usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+                );
             } catch (Exception e) {
                 Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.INFO, "Error editarGobierno" + e.getMessage(), Util.tiempo());
             }
@@ -297,6 +393,7 @@ public class GobiernoAdministrado extends AdministradorAbstracto implements Seri
 
     public void anularGobierno(Gobierno entidadSeleccionada) {
         logger.info(":: GobiernoAdministrado.anularGobierno() :: Starting execution...");
+        long startTime = System.currentTimeMillis();
         try {
             UsuarioAdministrado usuarioAdministrado = (UsuarioAdministrado) getFacesContext().getApplication().createValueBinding("#{usuarioAdministrado}").getValue(getFacesContext());
             if (null != entidadSeleccionada) {
@@ -309,6 +406,14 @@ public class GobiernoAdministrado extends AdministradorAbstracto implements Seri
                 // Update List Browser
                 loadGobiernoList();
             }
+            long stopTime = System.currentTimeMillis();
+            rendimientoCallService.crearRendimiento(
+                    SiscapWebUtil.crearRendimiento(
+                            Thread.currentThread().getStackTrace()[1].getMethodName(),
+                            EnumFuncionalidad.GOBIERNO.getNidFuncionalidadBigInteger(),
+                            SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                            usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+            );
         } catch (Exception e) {
             Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.INFO, "Error anularGobierno" + e.getMessage(), Util.tiempo());
         }
@@ -318,6 +423,7 @@ public class GobiernoAdministrado extends AdministradorAbstracto implements Seri
     public String obtenerGobiernoporId(BigInteger nidGobierno) {
         String resultado = "";
 
+        long startTime = System.currentTimeMillis();
         try {
             if (null != nidGobierno) {
                 Gobierno gobierno = gobiernoCallService.find(new BigDecimal(nidGobierno));
@@ -326,6 +432,14 @@ public class GobiernoAdministrado extends AdministradorAbstracto implements Seri
                     resultado = gobierno.getTxtGobierno();
                 }
             }
+            long stopTime = System.currentTimeMillis();
+            rendimientoCallService.crearRendimiento(
+                    SiscapWebUtil.crearRendimiento(
+                            Thread.currentThread().getStackTrace()[1].getMethodName(),
+                            EnumFuncionalidad.GOBIERNO.getNidFuncionalidadBigInteger(),
+                            SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                            usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+            );
         } catch (Exception e) {
             Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.INFO, "{0}Obtener Gobierno" + e.getMessage(), Util.tiempo());
         }
@@ -339,8 +453,9 @@ public class GobiernoAdministrado extends AdministradorAbstracto implements Seri
         logger.info(":: GobiernoAdministrado.limpiarGobierno :: Execution finish.");
     }
 
-    private void loadGobiernoList() {
+    private void loadGobiernoList() throws Exception {
         logger.info(":: GobiernoAdministrado.loadFuncionList :: Starting execution...");
+        long startTime = System.currentTimeMillis();
         Map<String, Object> parameters = new HashMap<>();
         //parameters.put("flgActivo", CoreConstant.STATUS_ACTIVE);
 
@@ -348,6 +463,14 @@ public class GobiernoAdministrado extends AdministradorAbstracto implements Seri
         findByParamBean.setParameters(parameters);
         findByParamBean.setOrderBy("nidGobierno");
         this.gobiernoList = gobiernoCallService.loadGobiernoList(findByParamBean);
+        long stopTime = System.currentTimeMillis();
+        rendimientoCallService.crearRendimiento(
+                SiscapWebUtil.crearRendimiento(
+                        Thread.currentThread().getStackTrace()[1].getMethodName(),
+                        EnumFuncionalidad.GOBIERNO.getNidFuncionalidadBigInteger(),
+                        SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                        usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+        );
         logger.info(":: GobiernoAdministrado.loadFuncionList :: Execution finish.");
     }
 }

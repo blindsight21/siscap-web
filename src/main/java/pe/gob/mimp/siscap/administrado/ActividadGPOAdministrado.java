@@ -14,12 +14,19 @@ import pe.gob.mimp.core.Util;
 import pe.gob.mimp.general.administrado.AdministradorAbstracto;
 import pe.gob.mimp.seguridad.administrado.UsuarioAdministrado;
 import pe.gob.mimp.siscap.modelo.ActividadGobPubliObje;
+import pe.gob.mimp.siscap.util.SiscapWebUtil;
 import pe.gob.mimp.siscap.ws.actividadgpo.cliente.ActividadGPOCallService;
+import pe.gob.mimp.siscap.ws.rendimiento.cliente.RendimientoCallService;
+import pe.gob.mimp.util.EnumFuncionalidad;
 import pe.gob.mimp.utils.Funciones;
 
 @ManagedBean
 @ViewScoped
 public class ActividadGPOAdministrado extends AdministradorAbstracto implements Serializable {
+
+    UsuarioAdministrado usuarioAdministrado = (UsuarioAdministrado) getFacesContext().getApplication().createValueBinding("#{usuarioAdministrado}").getValue(getFacesContext());
+    @Inject
+    private RendimientoCallService rendimientoCallService;
 
     private Logger logger = Logger.getLogger(ActividadGobPubliObje.class.getName());
     private static final long serialVersionUID = 1L;
@@ -83,6 +90,7 @@ public class ActividadGPOAdministrado extends AdministradorAbstracto implements 
 
     public void editarActividadGPO(ActividadGobPubliObje entidadSeleccionada) {
         logger.info(":: ActividadGobAdministrado.editarActividadGob :: Starting execution...");
+        long startTime = System.currentTimeMillis();
         if (validarFormularioGPO()) {
             try {
                 UsuarioAdministrado usuarioAdministrado = (UsuarioAdministrado) getFacesContext().getApplication().createValueBinding("#{usuarioAdministrado}").getValue(getFacesContext());
@@ -96,6 +104,14 @@ public class ActividadGPOAdministrado extends AdministradorAbstracto implements 
 
                 RequestContext.getCurrentInstance().execute("PF('dialogoEditarPublicoObjetivo').hide()");
 
+                long stopTime = System.currentTimeMillis();
+                rendimientoCallService.crearRendimiento(
+                        SiscapWebUtil.crearRendimiento(
+                                Thread.currentThread().getStackTrace()[1].getMethodName(),
+                                EnumFuncionalidad.ACTIVIDADES.getNidFuncionalidadBigInteger(),
+                                SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                                usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+                );
             } catch (Exception e) {
                 Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.INFO, "Error editarActividadGob" + e.getMessage(), Util.tiempo());
             }

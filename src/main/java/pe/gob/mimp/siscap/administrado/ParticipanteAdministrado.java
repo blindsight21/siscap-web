@@ -28,18 +28,25 @@ import pe.gob.mimp.siscap.modelo.ActividadGob;
 import pe.gob.mimp.siscap.modelo.Participante;
 import pe.gob.mimp.siscap.modelo.PersonaSiscap;
 import pe.gob.mimp.siscap.modelo.PublicoObjetivo;
+import pe.gob.mimp.siscap.util.SiscapWebUtil;
 import pe.gob.mimp.siscap.webservices.IdentificacionReniec;
 import pe.gob.mimp.siscap.ws.actividadgob.cliente.ActividadGobCallService;
 import pe.gob.mimp.siscap.ws.actividadgpo.cliente.ActividadGPOCallService;
 import pe.gob.mimp.siscap.ws.participante.cliente.ParticipanteCallService;
 import pe.gob.mimp.siscap.ws.personasiscap.cliente.PersonaSiscapCallService;
 import pe.gob.mimp.siscap.ws.publicoobjetivo.cliente.PublicoObjetivoCallService;
+import pe.gob.mimp.siscap.ws.rendimiento.cliente.RendimientoCallService;
 import pe.gob.mimp.siscap.ws.tipodocumento.cliente.TipoDocumentoCallService;
+import pe.gob.mimp.util.EnumFuncionalidad;
 import pe.gob.mimp.utils.Funciones;
 
 @ManagedBean
 @ViewScoped
 public class ParticipanteAdministrado extends AdministradorAbstracto implements Serializable {
+
+    UsuarioAdministrado usuarioAdministrado = (UsuarioAdministrado) getFacesContext().getApplication().createValueBinding("#{usuarioAdministrado}").getValue(getFacesContext());
+    @Inject
+    private RendimientoCallService rendimientoCallService;
 
     private Logger logger = Logger.getLogger(Participante.class.getName());
     private static final long serialVersionUID = 1L;
@@ -70,7 +77,10 @@ public class ParticipanteAdministrado extends AdministradorAbstracto implements 
 
     @PostConstruct
     public void initBean() {
-        limpiarParticipante("1");
+        try {
+            limpiarParticipante("1");
+        } catch (Exception e) {
+        }
         this.entidadSeleccionada = new Participante();
         this.actividadGobSeleccionado = new ActividadGob();
     }
@@ -129,6 +139,7 @@ public class ParticipanteAdministrado extends AdministradorAbstracto implements 
     }
 
     public boolean validarFormulario() { // (true: Crear | false: Modificar) ; (1: programar | 2: Ejecutar)
+        long startTime = System.currentTimeMillis();
         try {
             PersonaSiscapAdministrado personaSiscapAdministrado = (PersonaSiscapAdministrado) getFacesContext().getApplication().createValueBinding("#{personaSiscapAdministrado}").getValue(getFacesContext());
             TipoDocumentoAdministrado tipoDocumentoAdministrado = (TipoDocumentoAdministrado) getFacesContext().getApplication().createValueBinding("#{tipoDocumentoAdministrado}").getValue(getFacesContext());
@@ -159,6 +170,14 @@ public class ParticipanteAdministrado extends AdministradorAbstracto implements 
                 return enviarWarnMessage("Seleccione el publico objetivo");
             }
 
+            long stopTime = System.currentTimeMillis();
+            rendimientoCallService.crearRendimiento(
+                    SiscapWebUtil.crearRendimiento(
+                            Thread.currentThread().getStackTrace()[1].getMethodName(),
+                            EnumFuncionalidad.ACTIVIDADES.getNidFuncionalidadBigInteger(),
+                            SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                            usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+            );
             return true;
         } catch (Exception e) {
             Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.INFO, "Error validarFormulario" + e.getMessage(), Util.tiempo());
@@ -167,6 +186,8 @@ public class ParticipanteAdministrado extends AdministradorAbstracto implements 
     }
 
     public void buscarParticipante() {
+        long startTime = System.currentTimeMillis();
+
         PersonaSiscapAdministrado personaSiscapAdministrado = (PersonaSiscapAdministrado) getFacesContext().getApplication().createValueBinding("#{personaSiscapAdministrado}").getValue(getFacesContext());
         TipoDocumentoAdministrado tipoDocumentoAdministrado = (TipoDocumentoAdministrado) getFacesContext().getApplication().createValueBinding("#{tipoDocumentoAdministrado}").getValue(getFacesContext());
 
@@ -261,6 +282,14 @@ public class ParticipanteAdministrado extends AdministradorAbstracto implements 
                     }
                     break;
             }
+            long stopTime = System.currentTimeMillis();
+            rendimientoCallService.crearRendimiento(
+                    SiscapWebUtil.crearRendimiento(
+                            Thread.currentThread().getStackTrace()[1].getMethodName(),
+                            EnumFuncionalidad.ACTIVIDADES.getNidFuncionalidadBigInteger(),
+                            SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                            usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+            );
         } catch (Exception e) {
             setFlgNuevoParticipante(!enviarWarnMessage("Debe seleccionar el tipo de documento a buscar"));
         }
@@ -290,6 +319,7 @@ public class ParticipanteAdministrado extends AdministradorAbstracto implements 
     }
 
     public void validarCantidadParticipantes(ActividadGob actividadGobSeleccionado) {
+        long startTime = System.currentTimeMillis();
         UsuarioAdministrado usuarioAdministrado = (UsuarioAdministrado) getFacesContext().getApplication().createValueBinding("#{usuarioAdministrado}").getValue(getFacesContext());
         //ActividadGob actividadGobierno = null;
         try {
@@ -313,12 +343,23 @@ public class ParticipanteAdministrado extends AdministradorAbstracto implements 
             actividadGobSeleccionado.setTxtPc(Internet.obtenerNombrePC());
             actividadGobSeleccionado.setTxtIp(Internet.obtenerIPPC());
             actividadGobSeleccionado.setFecEdicion(new Date());
+
+            long stopTime = System.currentTimeMillis();
+            rendimientoCallService.crearRendimiento(
+                    SiscapWebUtil.crearRendimiento(
+                            Thread.currentThread().getStackTrace()[1].getMethodName(),
+                            EnumFuncionalidad.ACTIVIDADES.getNidFuncionalidadBigInteger(),
+                            SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                            usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+            );
+
         } catch (Exception e) {
         }
         this.actividadGobSeleccionado = actividadGobSeleccionado;
     }
 
     public void removeParticipanteList(Participante entidadSeleccionada, ActividadGob actividadGobSeleccionado) {
+        long startTime = System.currentTimeMillis();
         logger.info(":: ParticipanteAdministrado.anularParticipante :: Starting execution...");
         try {
             for (Participante participante : participanteList) {
@@ -328,6 +369,15 @@ public class ParticipanteAdministrado extends AdministradorAbstracto implements 
                 }
             }
             validarCantidadParticipantes(actividadGobSeleccionado);
+
+            long stopTime = System.currentTimeMillis();
+            rendimientoCallService.crearRendimiento(
+                    SiscapWebUtil.crearRendimiento(
+                            Thread.currentThread().getStackTrace()[1].getMethodName(),
+                            EnumFuncionalidad.ACTIVIDADES.getNidFuncionalidadBigInteger(),
+                            SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                            usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+            );
         } catch (Exception e) {
             Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.INFO, "Error anularActividadGob" + e.getMessage(), Util.tiempo());
         }
@@ -337,6 +387,7 @@ public class ParticipanteAdministrado extends AdministradorAbstracto implements 
 
     public void addParticipanteList(ActividadGob actividadGobSeleccionado) {
         try {
+            long startTime = System.currentTimeMillis();
             if (validarFormulario()) {
                 Boolean rpta = false;
                 UsuarioAdministrado usuarioAdministrado = (UsuarioAdministrado) getFacesContext().getApplication().createValueBinding("#{usuarioAdministrado}").getValue(getFacesContext());
@@ -410,6 +461,14 @@ public class ParticipanteAdministrado extends AdministradorAbstracto implements 
                 }
 
             }
+            long stopTime = System.currentTimeMillis();
+            rendimientoCallService.crearRendimiento(
+                    SiscapWebUtil.crearRendimiento(
+                            Thread.currentThread().getStackTrace()[1].getMethodName(),
+                            EnumFuncionalidad.ACTIVIDADES.getNidFuncionalidadBigInteger(),
+                            SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                            usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+            );
         } catch (Exception e) {
         }
     }
@@ -418,6 +477,7 @@ public class ParticipanteAdministrado extends AdministradorAbstracto implements 
         logger.info(":: ParticipanteAdministrado.crearParticipante :: Starting execution...");
 
         try {
+            long startTime = System.currentTimeMillis();
             if (validarFormulario()) {
                 Boolean rpta = false;
                 UsuarioAdministrado usuarioAdministrado = (UsuarioAdministrado) getFacesContext().getApplication().createValueBinding("#{usuarioAdministrado}").getValue(getFacesContext());
@@ -496,6 +556,14 @@ public class ParticipanteAdministrado extends AdministradorAbstracto implements 
                 }
 
             }
+            long stopTime = System.currentTimeMillis();
+            rendimientoCallService.crearRendimiento(
+                    SiscapWebUtil.crearRendimiento(
+                            Thread.currentThread().getStackTrace()[1].getMethodName(),
+                            EnumFuncionalidad.ACTIVIDADES.getNidFuncionalidadBigInteger(),
+                            SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                            usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+            );
         } catch (Exception e) {
         }
         logger.info(":: ParticipanteAdministrado.crearParticipante() :: Execution finish");
@@ -504,6 +572,7 @@ public class ParticipanteAdministrado extends AdministradorAbstracto implements 
     public void anularParticipante(Participante entidadSeleccionada, ActividadGob actividadGobSeleccionado) {
         logger.info(":: ParticipanteAdministrado.anularParticipante :: Starting execution...");
         try {
+            long startTime = System.currentTimeMillis();
             UsuarioAdministrado usuarioAdministrado = (UsuarioAdministrado) getFacesContext().getApplication().createValueBinding("#{usuarioAdministrado}").getValue(getFacesContext());
 
             entidadSeleccionada.setFlgActivo(BigInteger.ZERO);
@@ -515,6 +584,15 @@ public class ParticipanteAdministrado extends AdministradorAbstracto implements 
             participanteCallService.editarParticipante(entidadSeleccionada);
             loadParticipanteList();
             validarCantidadParticipantes(actividadGobSeleccionado);
+
+            long stopTime = System.currentTimeMillis();
+            rendimientoCallService.crearRendimiento(
+                    SiscapWebUtil.crearRendimiento(
+                            Thread.currentThread().getStackTrace()[1].getMethodName(),
+                            EnumFuncionalidad.ACTIVIDADES.getNidFuncionalidadBigInteger(),
+                            SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                            usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+            );
         } catch (Exception e) {
             Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.INFO, "Error anularActividadGob" + e.getMessage(), Util.tiempo());
         }
@@ -522,7 +600,9 @@ public class ParticipanteAdministrado extends AdministradorAbstracto implements 
         logger.info(":: ParticipanteAdministrado.anularParticipante() :: Execution finish");
     }
 
-    public void limpiarParticipante(String num) {
+    public void limpiarParticipante(String num) throws Exception {
+        long startTime = System.currentTimeMillis();
+
         TipoDocumentoAdministrado tipoDocumentoAdministrado = (TipoDocumentoAdministrado) getFacesContext().getApplication().createValueBinding("#{tipoDocumentoAdministrado}").getValue(getFacesContext());
         PersonaSiscapAdministrado personaSiscapAdministrado = (PersonaSiscapAdministrado) getFacesContext().getApplication().createValueBinding("#{personaSiscapAdministrado}").getValue(getFacesContext());
         PublicoObjetivoAdministrado publicoObjetivoAdministrado = (PublicoObjetivoAdministrado) getFacesContext().getApplication().createValueBinding("#{publicoObjetivoAdministrado}").getValue(getFacesContext());
@@ -530,34 +610,43 @@ public class ParticipanteAdministrado extends AdministradorAbstracto implements 
         switch (num) {
             case "1":
                 try {
-                    this.publicoObjetivoList = new ArrayList<>();
-                    //ActidviadGob actividadGobId = actividadGobAdministrado.getEntidadSeleccionada();
-                    Map<String, Object> parameters = new HashMap<>();
-                    parameters.put("flgActivo", CoreConstant.STATUS_ACTIVE);
-                    //parameters.put("nidActividadGob", actividadGobId);
-                    this.publicoObjetivoList = publicoObjetivoCallService.loadPublicoObjetivoList(new FindByParamBean(parameters, "nidPublicoObjetivo"));
-                    /*List<ActividadGobPubliObje> actividadPO = fachadaActividadGPO.findByParams(parameters, "nidPublicoObjetivo");
+                this.publicoObjetivoList = new ArrayList<>();
+                //ActidviadGob actividadGobId = actividadGobAdministrado.getEntidadSeleccionada();
+                Map<String, Object> parameters = new HashMap<>();
+                parameters.put("flgActivo", CoreConstant.STATUS_ACTIVE);
+                //parameters.put("nidActividadGob", actividadGobId);
+                this.publicoObjetivoList = publicoObjetivoCallService.loadPublicoObjetivoList(new FindByParamBean(parameters, "nidPublicoObjetivo"));
+                /*List<ActividadGobPubliObje> actividadPO = fachadaActividadGPO.findByParams(parameters, "nidPublicoObjetivo");
                      for (ActividadGobPubliObje agpo : actividadPO) {
                      this.publicoObjetivoList.add(fachadaPublicoObjetivo.find(agpo.getNidPublicoObjetivo().getNidPublicoObjetivo()));
                      }*/
-                } catch (Exception e) {
+            } catch (Exception e) {
 
-                }
-                //this.entidadSeleccionada = new Participante();
-                this.flgNuevoParticipante = true;
+            }
+            //this.entidadSeleccionada = new Participante();
+            this.flgNuevoParticipante = true;
 
-                publicoObjetivoAdministrado.setEntidadSeleccionada(new PublicoObjetivo());
-                personaSiscapAdministrado.setEntidadSeleccionada(new PersonaSiscap());
+            publicoObjetivoAdministrado.setEntidadSeleccionada(new PublicoObjetivo());
+            personaSiscapAdministrado.setEntidadSeleccionada(new PersonaSiscap());
 
-                TipoDocumento tipoDocumento = tipoDocumentoCallService.find(BigDecimal.ONE);
-                tipoDocumentoAdministrado.setEntidadSeleccionada(tipoDocumento);
+            TipoDocumento tipoDocumento = tipoDocumentoCallService.find(BigDecimal.ONE);
+            tipoDocumentoAdministrado.setEntidadSeleccionada(tipoDocumento);
 
-                break;
+            break;
             case "2":
                 personaSiscapAdministrado.setEntidadSeleccionada(new PersonaSiscap());
                 this.flgNuevoParticipante = true;
                 break;
         }
+
+        long stopTime = System.currentTimeMillis();
+        rendimientoCallService.crearRendimiento(
+                SiscapWebUtil.crearRendimiento(
+                        Thread.currentThread().getStackTrace()[1].getMethodName(),
+                        EnumFuncionalidad.ACTIVIDADES.getNidFuncionalidadBigInteger(),
+                        SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                        usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+        );
     }
 
     private void loadParticipanteList() {

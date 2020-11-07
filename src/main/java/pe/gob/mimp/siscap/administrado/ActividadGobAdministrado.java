@@ -60,6 +60,7 @@ import pe.gob.mimp.siscap.modelo.TipoFuncion;
 import pe.gob.mimp.siscap.modelo.TipoGobierno;
 import pe.gob.mimp.siscap.modelo.TipoModalidad;
 import pe.gob.mimp.siscap.modelo.TipoObjetivo;
+import pe.gob.mimp.siscap.util.SiscapWebUtil;
 import pe.gob.mimp.siscap.ws.actividadge.cliente.ActividadGECallService;
 import pe.gob.mimp.siscap.ws.actividadgob.cliente.ActividadGobCallService;
 import pe.gob.mimp.siscap.ws.actividadgpo.cliente.ActividadGPOCallService;
@@ -81,16 +82,22 @@ import pe.gob.mimp.siscap.ws.persona.cliente.PersonaCallService;
 import pe.gob.mimp.siscap.ws.programacionfecha.cliente.ProgramacionFechaCallService;
 import pe.gob.mimp.siscap.ws.provincia.cliente.ProvinciaCallService;
 import pe.gob.mimp.siscap.ws.publicoobjetivo.cliente.PublicoObjetivoCallService;
+import pe.gob.mimp.siscap.ws.rendimiento.cliente.RendimientoCallService;
 import pe.gob.mimp.siscap.ws.telefonopersonasiscap.cliente.TelefonoPersonaSiscapCallService;
 import pe.gob.mimp.siscap.ws.tipofuncion.cliente.TipoFuncionCallService;
 import pe.gob.mimp.siscap.ws.tipogobierno.cliente.TipoGobiernoCallService;
 import pe.gob.mimp.siscap.ws.tipomodalidad.cliente.TipoModalidadCallService;
 import pe.gob.mimp.siscap.ws.tipoobjetivo.cliente.TipoObjetivoCallService;
+import pe.gob.mimp.util.EnumFuncionalidad;
 import pe.gob.mimp.utils.Funciones;
 
 @ManagedBean
 @ViewScoped
 public class ActividadGobAdministrado extends AdministradorAbstracto implements Serializable {
+
+    UsuarioAdministrado usuarioAdministrado = (UsuarioAdministrado) getFacesContext().getApplication().createValueBinding("#{usuarioAdministrado}").getValue(getFacesContext());
+    @Inject
+    private RendimientoCallService rendimientoCallService;
 
     private Logger logger = Logger.getLogger(ActividadGob.class.getName());
     private static final long serialVersionUID = 1L;
@@ -187,6 +194,7 @@ public class ActividadGobAdministrado extends AdministradorAbstracto implements 
     @PostConstruct
     public void initBean() {
         logger.info(":: ActividadGobAdministrado.initBean :: Starting execution...");
+        long startTime = System.currentTimeMillis();
         try {
             AreaAdministrado areaAdministrado = (AreaAdministrado) getFacesContext().getApplication().createValueBinding("#{areaAdministrado}").getValue(getFacesContext());
 
@@ -222,6 +230,14 @@ public class ActividadGobAdministrado extends AdministradorAbstracto implements 
 
             this.actividadGobCoincidenciaList = new ArrayList<>();
 
+            long stopTime = System.currentTimeMillis();
+            rendimientoCallService.crearRendimiento(
+                    SiscapWebUtil.crearRendimiento(
+                            Thread.currentThread().getStackTrace()[1].getMethodName(),
+                            EnumFuncionalidad.ACTIVIDADES.getNidFuncionalidadBigInteger(),
+                            SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                            usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+            );
         } catch (Exception e) {
             Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.INFO, "Error method initBean" + e.getMessage(), Util.tiempo());
         }
@@ -404,11 +420,20 @@ public class ActividadGobAdministrado extends AdministradorAbstracto implements 
         this.tipoBoton = tipoBoton;
     }
 
-    public ActividadGob getEntidad(BigInteger id) {
+    public ActividadGob getEntidad(BigInteger id) throws Exception {
+        long startTime = System.currentTimeMillis();
         ActividadGob actividadGob = null;
         if (null != id) {
             actividadGob = actividadGobCallService.find(new BigDecimal(id));
         }
+        long stopTime = System.currentTimeMillis();
+        rendimientoCallService.crearRendimiento(
+                SiscapWebUtil.crearRendimiento(
+                        Thread.currentThread().getStackTrace()[1].getMethodName(),
+                        EnumFuncionalidad.ACTIVIDADES.getNidFuncionalidadBigInteger(),
+                        SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                        usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+        );
         return actividadGob;
     }
 
@@ -462,13 +487,23 @@ public class ActividadGobAdministrado extends AdministradorAbstracto implements 
 
     public void obtenerFuncionByTipoFuncion(AjaxBehaviorEvent e) throws Exception {
         logger.info(":: ActividadGobAdministrado.obtenerFuncionByTipoFuncion :: Starting execution...");
+        long startTime = System.currentTimeMillis();
         this.entidadSeleccionada.setNidFuncionTransferida(null);
         this.funcionTransferidaList = null;
         loadFuncionList();
+        long stopTime = System.currentTimeMillis();
+        rendimientoCallService.crearRendimiento(
+                SiscapWebUtil.crearRendimiento(
+                        Thread.currentThread().getStackTrace()[1].getMethodName(),
+                        EnumFuncionalidad.ACTIVIDADES.getNidFuncionalidadBigInteger(),
+                        SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                        usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+        );
         logger.info(":: ActividadGobAdministrado.obtenerFuncionByTipoFuncion :: Execution finish.");
     }
 
-    private void loadFuncionList() {
+    private void loadFuncionList() throws Exception {
+        long startTime = System.currentTimeMillis();
         TipoFuncion tipoFuncion = tipoFuncionCallService.find(this.entidadSeleccionada.getNidTipoFuncion());
         if (!Funciones.esVacio(tipoFuncion)) {
 
@@ -479,18 +514,36 @@ public class ActividadGobAdministrado extends AdministradorAbstracto implements 
             this.funcionTransferidaList = funcionTransferidaCallService.loadFuncionTransferidaList(new FindByParamBean(parameters, "txtFuncionTransferida"));
             logger.log(Level.INFO, " Funcion transferida {0}", this.funcionTransferidaList);
         }
+        long stopTime = System.currentTimeMillis();
+        rendimientoCallService.crearRendimiento(
+                SiscapWebUtil.crearRendimiento(
+                        Thread.currentThread().getStackTrace()[1].getMethodName(),
+                        EnumFuncionalidad.ACTIVIDADES.getNidFuncionalidadBigInteger(),
+                        SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                        usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+        );
     }
 
     public void obtenerGobiernoByTipoGobierno(AjaxBehaviorEvent e) throws Exception {
         logger.info(":: ActividadGobAdministrado.obtenerGobiernoByTipoGobierno :: Starting execution...");
+        long startTime = System.currentTimeMillis();
         this.entidadSeleccionada.setNidGobierno(null);
         this.gobiernoSedeList = null;
         loadGobiernoSedeList();
+        long stopTime = System.currentTimeMillis();
+        rendimientoCallService.crearRendimiento(
+                SiscapWebUtil.crearRendimiento(
+                        Thread.currentThread().getStackTrace()[1].getMethodName(),
+                        EnumFuncionalidad.ACTIVIDADES.getNidFuncionalidadBigInteger(),
+                        SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                        usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+        );
         logger.info(":: ActividadGobAdministrado.obtenerGobiernoByTipoGobierno :: Execution finish.");
     }
 
-    private void loadGobiernoSedeList() {
+    private void loadGobiernoSedeList() throws Exception, Exception {
         logger.info(":: ActividadGobAdministrado.loadGobiernoSedeList :: Starting execution...");
+        long startTime = System.currentTimeMillis();
         TipoGobierno tipoGobierno = tipoGobiernoCallService.find(this.entidadSeleccionada.getNidTipoGobierno());
         if (!Funciones.esVacio(tipoGobierno)) {
 
@@ -501,10 +554,19 @@ public class ActividadGobAdministrado extends AdministradorAbstracto implements 
             this.gobiernoSedeList = gobiernoCallService.loadGobiernoList(new FindByParamBean(parameters, "txtGobierno"));
             logger.log(Level.INFO, " Gobierno {0}", this.gobiernoSedeList);
         }
+        long stopTime = System.currentTimeMillis();
+        rendimientoCallService.crearRendimiento(
+                SiscapWebUtil.crearRendimiento(
+                        Thread.currentThread().getStackTrace()[1].getMethodName(),
+                        EnumFuncionalidad.ACTIVIDADES.getNidFuncionalidadBigInteger(),
+                        SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                        usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+        );
         logger.info(":: ActividadGobAdministrado.loadGobiernoSedeList :: Execution finish.");
     }
 
     public boolean validarFormulario(boolean isNew, int num) { // (true: Crear | false: Modificar) ; (1: programar | 2: Ejecutar | 3: Reprogramar | 4: Justificacion | )
+        long startTime = System.currentTimeMillis();
         ParticipanteAdministrado participanteAdministrado = (ParticipanteAdministrado) getFacesContext().getApplication().createValueBinding("#{participanteAdministrado}").getValue(getFacesContext());
         FileUploadViewAdministrado fileUploadViewAdministrado = (FileUploadViewAdministrado) getFacesContext().getApplication().createValueBinding("#{fileUploadViewAdministrado}").getValue(getFacesContext());
         ActividadGEAdministrado actividadGEAdministrado = (ActividadGEAdministrado) getFacesContext().getApplication().createValueBinding("#{actividadGEAdministrado}").getValue(getFacesContext());
@@ -628,7 +690,7 @@ public class ActividadGobAdministrado extends AdministradorAbstracto implements 
                 if (this.getEntidadSeleccionada().getTxtJustificacionReprogramado().equals("")) {
                     return enviarWarnMessage("Debe justificar la reprogramacion de la actividad");
                 }
-                
+
             } else if (num == 4) {
                 if (this.getEntidadSeleccionada().getTxtJustificacionAnulado().equals("")) {
                     return enviarWarnMessage("Debe justificar la anulacion de la actividad");
@@ -649,6 +711,14 @@ public class ActividadGobAdministrado extends AdministradorAbstracto implements 
                     }
                 }
             }
+            long stopTime = System.currentTimeMillis();
+            rendimientoCallService.crearRendimiento(
+                    SiscapWebUtil.crearRendimiento(
+                            Thread.currentThread().getStackTrace()[1].getMethodName(),
+                            EnumFuncionalidad.ACTIVIDADES.getNidFuncionalidadBigInteger(),
+                            SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                            usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+            );
             return true;
         } catch (Exception e) {
             Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.INFO, "Error validarFormulario" + e.getMessage(), Util.tiempo());
@@ -687,6 +757,7 @@ public class ActividadGobAdministrado extends AdministradorAbstracto implements 
     }
 
     public void obtenerTrimestreyAlerta(Boolean alertaCoincidencia) {
+        long startTime = System.currentTimeMillis();
         ActividadGEAdministrado actividadGEAdministrado = (ActividadGEAdministrado) getFacesContext().getApplication().createValueBinding("#{actividadGEAdministrado}").getValue(getFacesContext());
         try {
             actividadGobCoincidenciaList = new ArrayList<>();
@@ -712,7 +783,7 @@ public class ActividadGobAdministrado extends AdministradorAbstracto implements 
                         parameters.put("nidGobierno", this.getEntidadSeleccionada().getNidGobierno());
                         List<ActividadGob> actividadGobEncontrados = actividadGobCallService.loadActividadGobList(new FindByParamBean(parameters, "nidActividadGob"));
 
-                        if (!actividadGobEncontrados.isEmpty()) {
+                        if (!pe.gob.mimp.util.Util.esListaVacia(actividadGobEncontrados)) {
                             for (ActividadGob actividadGob : actividadGobEncontrados) {
                                 if (actividadGEAdministrado.obtenerEstado(actividadGob).equals("PROGRAMADO")
                                         || actividadGEAdministrado.obtenerEstado(actividadGob).equals("REPROGRAMADO")) {
@@ -737,6 +808,14 @@ public class ActividadGobAdministrado extends AdministradorAbstracto implements 
                     }
                 }
             }
+            long stopTime = System.currentTimeMillis();
+            rendimientoCallService.crearRendimiento(
+                    SiscapWebUtil.crearRendimiento(
+                            Thread.currentThread().getStackTrace()[1].getMethodName(),
+                            EnumFuncionalidad.ACTIVIDADES.getNidFuncionalidadBigInteger(),
+                            SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                            usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+            );
         } catch (Exception e) {
             Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.INFO, "{0} Error obtenerTrimestreyAlerta" + e.getMessage(), Util.tiempo());
             this.alertaActividad = "";
@@ -772,6 +851,7 @@ public class ActividadGobAdministrado extends AdministradorAbstracto implements 
 
     public void cargarActividadGob(boolean isEdit) {
         logger.info(":: ActividadGobAdministrado.cargarActividadGob :: Starting execution...");
+        long startTime = System.currentTimeMillis();
         try {
 
             FuncionTransferida funcionTransferida = this.getEntidadSeleccionada().getNidFuncionTransferida();
@@ -791,7 +871,7 @@ public class ActividadGobAdministrado extends AdministradorAbstracto implements 
                 this.publicoObjetivoList = publicoObjetivoCallService.loadPublicoObjetivoList(new FindByParamBean(parameters, "txtPublicoObjetivo"));
                 this.gobiernoPublicoList = gobiernoCallService.loadGobiernoList(new FindByParamBean(parameters, "txtGobierno"));
                 parameters.put("nidActividadGob", ActividadGobId);
-                
+
                 this.entidadSeleccionada.setNidEstadoActividad(actividadGECallService.loadActividadGEList(new FindByParamBean(parameters, "nidActividadGobEActGob")).get(0).getNidEstadoActividadGob().getNidEstadoActividadGob());
 
             } else {
@@ -809,14 +889,23 @@ public class ActividadGobAdministrado extends AdministradorAbstracto implements 
                     this.gobiernoPublicoList.add(gobiernoCallService.find(agpp.getNidGobierno().getNidGobierno()));
                 }
             }
+            long stopTime = System.currentTimeMillis();
+            rendimientoCallService.crearRendimiento(
+                    SiscapWebUtil.crearRendimiento(
+                            Thread.currentThread().getStackTrace()[1].getMethodName(),
+                            EnumFuncionalidad.ACTIVIDADES.getNidFuncionalidadBigInteger(),
+                            SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                            usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+            );
         } catch (Exception e) {
             Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.INFO, "Error cargarActividadGob" + e.getMessage(), Util.tiempo());
         }
         logger.info(":: ActividadGobAdministrado.cargarActividadGob :: Execution finish.");
     }
 
-    public void crearActividadGob() {
+    public void crearActividadGob() throws Exception {
         logger.info(":: ActividadGobAdministrado.crearActividadGob :: Starting execution...");
+        long startTime = System.currentTimeMillis();
         if (validarFormulario(true, 1)) {
             try {
                 UsuarioAdministrado usuarioAdministrado = (UsuarioAdministrado) getFacesContext().getApplication().createValueBinding("#{usuarioAdministrado}").getValue(getFacesContext());
@@ -904,11 +993,20 @@ public class ActividadGobAdministrado extends AdministradorAbstracto implements 
                 Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.INFO, "No se encontro el distrito del gobierno: " + this.getEntidadSeleccionada().getNidGobierno(), Util.tiempo());
             }
         }
+        long stopTime = System.currentTimeMillis();
+        rendimientoCallService.crearRendimiento(
+                SiscapWebUtil.crearRendimiento(
+                        Thread.currentThread().getStackTrace()[1].getMethodName(),
+                        EnumFuncionalidad.ACTIVIDADES.getNidFuncionalidadBigInteger(),
+                        SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                        usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+        );
         logger.info(":: ActividadGobAdministrado.crearActividadGob :: Execution finish.");
     }
 
     public void editarActividadGob(ActividadGob entidadSeleccionada) {
         logger.info(":: ActividadGobAdministrado.editarActividadGob :: Starting execution...");
+        long startTime = System.currentTimeMillis();
         if (validarFormulario(false, 1)) {
             try {
                 UsuarioAdministrado usuarioAdministrado = (UsuarioAdministrado) getFacesContext().getApplication().createValueBinding("#{usuarioAdministrado}").getValue(getFacesContext());
@@ -923,6 +1021,14 @@ public class ActividadGobAdministrado extends AdministradorAbstracto implements 
                 loadActividadGobList();
                 RequestContext.getCurrentInstance().execute("PF('dialogoEditarActividadGob').hide()");
 
+                long stopTime = System.currentTimeMillis();
+                rendimientoCallService.crearRendimiento(
+                        SiscapWebUtil.crearRendimiento(
+                                Thread.currentThread().getStackTrace()[1].getMethodName(),
+                                EnumFuncionalidad.ACTIVIDADES.getNidFuncionalidadBigInteger(),
+                                SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                                usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+                );
             } catch (Exception e) {
                 Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.INFO, "Error editarActividadGob" + e.getMessage(), Util.tiempo());
             }
@@ -932,6 +1038,7 @@ public class ActividadGobAdministrado extends AdministradorAbstracto implements 
 
     public void anularActividadGob(ActividadGob entidadSeleccionada) {
         logger.info(":: ActividadGobAdministrado.anularActividadGob :: Starting execution...");
+        long startTime = System.currentTimeMillis();
         try {
             UsuarioAdministrado usuarioAdministrado = (UsuarioAdministrado) getFacesContext().getApplication().createValueBinding("#{usuarioAdministrado}").getValue(getFacesContext());
 
@@ -971,6 +1078,14 @@ public class ActividadGobAdministrado extends AdministradorAbstracto implements 
             loadActividadGobList();
             RequestContext.getCurrentInstance().execute("PF('dialogoJustificarActividadGob').hide()");
 
+            long stopTime = System.currentTimeMillis();
+            rendimientoCallService.crearRendimiento(
+                    SiscapWebUtil.crearRendimiento(
+                            Thread.currentThread().getStackTrace()[1].getMethodName(),
+                            EnumFuncionalidad.ACTIVIDADES.getNidFuncionalidadBigInteger(),
+                            SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                            usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+            );
         } catch (Exception e) {
             Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.INFO, "Error anularActividadGob" + e.getMessage(), Util.tiempo());
         }
@@ -1000,6 +1115,7 @@ public class ActividadGobAdministrado extends AdministradorAbstracto implements 
         BigInteger estado = null;
 
         try {
+            long startTime = System.currentTimeMillis();
             Map<String, Object> parameters = new HashMap<>();
             parameters.put("nidActividadGob", actividadGobierno);
             parameters.put("flgActivo", CoreConstant.STATUS_ACTIVE);
@@ -1008,6 +1124,14 @@ public class ActividadGobAdministrado extends AdministradorAbstracto implements 
             if (null != estados && 0 < estados.size()) {
                 estado = estados.get(0).getNidEstadoActividadGob().getNidEstadoActividadGob().toBigInteger();
             }
+            long stopTime = System.currentTimeMillis();
+            rendimientoCallService.crearRendimiento(
+                    SiscapWebUtil.crearRendimiento(
+                            Thread.currentThread().getStackTrace()[1].getMethodName(),
+                            EnumFuncionalidad.ACTIVIDADES.getNidFuncionalidadBigInteger(),
+                            SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                            usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+            );
         } catch (Exception e) {
             Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.SEVERE, null, e);
         }
@@ -1017,6 +1141,7 @@ public class ActividadGobAdministrado extends AdministradorAbstracto implements 
 
     public void justificarActividadGob(ActividadGob entidadSeleccionada) {
         try {
+            long startTime = System.currentTimeMillis();
             if (this.tipoBoton == 4) {
                 if (validarFormulario(true, 4)) {
                     this.anularActividadGob(this.entidadSeleccionada);
@@ -1063,6 +1188,14 @@ public class ActividadGobAdministrado extends AdministradorAbstracto implements 
                     RequestContext.getCurrentInstance().execute("PF('dialogoJustificarActividadGob').hide()");
                 }
             }
+            long stopTime = System.currentTimeMillis();
+            rendimientoCallService.crearRendimiento(
+                    SiscapWebUtil.crearRendimiento(
+                            Thread.currentThread().getStackTrace()[1].getMethodName(),
+                            EnumFuncionalidad.ACTIVIDADES.getNidFuncionalidadBigInteger(),
+                            SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                            usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+            );
         } catch (Exception e) {
             Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.SEVERE, null, e);
         }
@@ -1070,6 +1203,7 @@ public class ActividadGobAdministrado extends AdministradorAbstracto implements 
 
     public Boolean valideButtons(ActividadGob entidadSeleccionada, String tipoValidacion) {
         logger.info(":: ActividadGobAdministrado.valideButtons :: Starting execution...");
+        long startTime = System.currentTimeMillis();
         try {
             Boolean statusAnuladoyEjecutado = false;
             BigInteger estado = null;
@@ -1088,6 +1222,14 @@ public class ActividadGobAdministrado extends AdministradorAbstracto implements 
             }
 
             if (statusAnuladoyEjecutado) {
+                long stopTime = System.currentTimeMillis();
+                rendimientoCallService.crearRendimiento(
+                        SiscapWebUtil.crearRendimiento(
+                                Thread.currentThread().getStackTrace()[1].getMethodName(),
+                                EnumFuncionalidad.ACTIVIDADES.getNidFuncionalidadBigInteger(),
+                                SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                                usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+                );
                 return true;
             } else {
                 Map<String, Object> parameters = new HashMap<>();
@@ -1104,13 +1246,37 @@ public class ActividadGobAdministrado extends AdministradorAbstracto implements 
                     Date fecHoy = emptyDate(Calendar.getInstance().getTime()).getTime();
                     if (fecHoy.compareTo(programacionFecha.getFecInicio()) >= 0 && fecHoy.compareTo(programacionFecha.getFecFin()) <= 0) {
                         logger.info(":: ActividadGobAdministrado.valideButtons :: Execution finish.");
+                        long stopTime = System.currentTimeMillis();
+                        rendimientoCallService.crearRendimiento(
+                                SiscapWebUtil.crearRendimiento(
+                                        Thread.currentThread().getStackTrace()[1].getMethodName(),
+                                        EnumFuncionalidad.ACTIVIDADES.getNidFuncionalidadBigInteger(),
+                                        SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                                        usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+                        );
                         return false;
                     } else {
                         logger.info(":: ActividadGobAdministrado.valideButtons :: Execution finish.");
+                        long stopTime = System.currentTimeMillis();
+                        rendimientoCallService.crearRendimiento(
+                                SiscapWebUtil.crearRendimiento(
+                                        Thread.currentThread().getStackTrace()[1].getMethodName(),
+                                        EnumFuncionalidad.ACTIVIDADES.getNidFuncionalidadBigInteger(),
+                                        SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                                        usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+                        );
                         return true;
                     }
                 } else {
                     logger.info(":: ActividadGobAdministrado.valideButtons :: Execution finish.");
+                    long stopTime = System.currentTimeMillis();
+                    rendimientoCallService.crearRendimiento(
+                            SiscapWebUtil.crearRendimiento(
+                                    Thread.currentThread().getStackTrace()[1].getMethodName(),
+                                    EnumFuncionalidad.ACTIVIDADES.getNidFuncionalidadBigInteger(),
+                                    SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                                    usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+                    );
                     return true;
                 }
             }
@@ -1121,6 +1287,7 @@ public class ActividadGobAdministrado extends AdministradorAbstracto implements 
     }
 
     public void cargarEjecucion() {
+        long startTime = System.currentTimeMillis();
         if (tipoBoton == 4) {
             this.getEntidadSeleccionada().setFecInicio(null);
             this.getEntidadSeleccionada().setFecFin(null);
@@ -1149,6 +1316,14 @@ public class ActividadGobAdministrado extends AdministradorAbstracto implements 
             //fileUploadViewAdministrado.setArchivoActividadList(fachadaArchivoActividad.findByParams(parameters, "nidArchivoActividad"));
             fileUploadViewAdministrado.loadArchivoAsistenciaList();
             //}
+            long stopTime = System.currentTimeMillis();
+            rendimientoCallService.crearRendimiento(
+                    SiscapWebUtil.crearRendimiento(
+                            Thread.currentThread().getStackTrace()[1].getMethodName(),
+                            EnumFuncionalidad.ACTIVIDADES.getNidFuncionalidadBigInteger(),
+                            SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                            usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+            );
         } catch (Exception e) {
             Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.INFO, "Error cargarActividadGob" + e.getMessage(), Util.tiempo());
         }
@@ -1157,6 +1332,7 @@ public class ActividadGobAdministrado extends AdministradorAbstracto implements 
 
     public void ejecutarActividadGob(ActividadGob entidadSeleccionada) {
         logger.info(":: ActividadGobAdministrado.ejecutarActividadGob :: Starting execution...");
+        long startTime = System.currentTimeMillis();
         if (validarFormulario(true, 2)) {
             try {
                 ParticipanteAdministrado participanteAdministrado = (ParticipanteAdministrado) getFacesContext().getApplication().createValueBinding("#{participanteAdministrado}").getValue(getFacesContext());
@@ -1209,6 +1385,15 @@ public class ActividadGobAdministrado extends AdministradorAbstracto implements 
                 //}
                 loadActividadGobList();
                 RequestContext.getCurrentInstance().execute("PF('dialogoEjecutarActividadGob').hide()");
+
+                long stopTime = System.currentTimeMillis();
+                rendimientoCallService.crearRendimiento(
+                        SiscapWebUtil.crearRendimiento(
+                                Thread.currentThread().getStackTrace()[1].getMethodName(),
+                                EnumFuncionalidad.ACTIVIDADES.getNidFuncionalidadBigInteger(),
+                                SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                                usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+                );
             } catch (Exception e) {
                 Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.INFO, "Error ejecutarActividadGob" + e.getMessage(), Util.tiempo());
             }
@@ -1292,6 +1477,7 @@ public class ActividadGobAdministrado extends AdministradorAbstracto implements 
     }
 
     public void subirArchivo(FileUploadEvent event) {
+        long startTime = System.currentTimeMillis();
         UsuarioAdministrado usuarioAdministrado = (UsuarioAdministrado) getFacesContext().getApplication().createValueBinding("#{usuarioAdministrado}").getValue(getFacesContext());
 
         try {
@@ -1331,6 +1517,14 @@ public class ActividadGobAdministrado extends AdministradorAbstracto implements 
 
                 adicionarMensajeError("SISCAP", "NO SE SUBIÒ ARCHIVO");
             }
+            long stopTime = System.currentTimeMillis();
+            rendimientoCallService.crearRendimiento(
+                    SiscapWebUtil.crearRendimiento(
+                            Thread.currentThread().getStackTrace()[1].getMethodName(),
+                            EnumFuncionalidad.ACTIVIDADES.getNidFuncionalidadBigInteger(),
+                            SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                            usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+            );
         } catch (Exception e) {
 
             Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.SEVERE, null, e);
@@ -1339,6 +1533,7 @@ public class ActividadGobAdministrado extends AdministradorAbstracto implements 
 
     public void loadActividadGobList() {
         logger.info(":: ActividadGobAdministrado.loadActividadGobList :: Starting execution...");
+        long startTime = System.currentTimeMillis();
         try {
             UsuarioAdministrado usuarioAdministrado = (UsuarioAdministrado) getFacesContext().getApplication().createValueBinding("#{usuarioAdministrado}").getValue(getFacesContext());
 
@@ -1365,14 +1560,23 @@ public class ActividadGobAdministrado extends AdministradorAbstracto implements 
                     break;
                 }
             }
+            long stopTime = System.currentTimeMillis();
+            rendimientoCallService.crearRendimiento(
+                    SiscapWebUtil.crearRendimiento(
+                            Thread.currentThread().getStackTrace()[1].getMethodName(),
+                            EnumFuncionalidad.ACTIVIDADES.getNidFuncionalidadBigInteger(),
+                            SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                            usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+            );
         } catch (Exception e) {
             Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.INFO, "Error loadActividadGobList" + e.getMessage(), Util.tiempo());
         }
         logger.info(":: ActividadGobAdministrado.loadActividadGobList :: Execution finish.");
     }
 
-    public void clearFormActividad() {
+    public void clearFormActividad() throws Exception {
         logger.info(":: ActividadGobAdministrado.clearFormActividad :: Starting execution...");
+        long startTime = System.currentTimeMillis();
         AreaAdministrado areaAdministrado = (AreaAdministrado) getFacesContext().getApplication().createValueBinding("#{areaAdministrado}").getValue(getFacesContext());
 
         areaAdministrado.setEntidadSeleccionada(new Area());
@@ -1401,6 +1605,14 @@ public class ActividadGobAdministrado extends AdministradorAbstracto implements 
         this.publicoObjetivoList = publicoObjetivoCallService.loadPublicoObjetivoList(new FindByParamBean(parameters, "txtPublicoObjetivo"));
         this.gobiernoPublicoList = gobiernoCallService.loadGobiernoList(new FindByParamBean(parameters, "txtGobierno"));
 
+        long stopTime = System.currentTimeMillis();
+        rendimientoCallService.crearRendimiento(
+                SiscapWebUtil.crearRendimiento(
+                        Thread.currentThread().getStackTrace()[1].getMethodName(),
+                        EnumFuncionalidad.ACTIVIDADES.getNidFuncionalidadBigInteger(),
+                        SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                        usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+        );
         logger.info(":: ActividadGobAdministrado.clearFormActividad :: Execution finish.");
     }
 }

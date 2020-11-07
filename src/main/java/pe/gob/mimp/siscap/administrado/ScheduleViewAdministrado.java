@@ -37,10 +37,14 @@ import pe.gob.mimp.bean.FindByParamBean;
 import pe.gob.mimp.core.Util;
 import pe.gob.mimp.general.administrado.AdministradorAbstracto;
 import pe.gob.mimp.seguridad.administrado.AreaAdministrado;
+import pe.gob.mimp.seguridad.administrado.UsuarioAdministrado;
 import pe.gob.mimp.siscap.modelo.ActividadGob;
 import pe.gob.mimp.siscap.modelo.VwActividadCalendario;
+import pe.gob.mimp.siscap.util.SiscapWebUtil;
 import pe.gob.mimp.siscap.ws.actividadgob.cliente.ActividadGobCallService;
+import pe.gob.mimp.siscap.ws.rendimiento.cliente.RendimientoCallService;
 import pe.gob.mimp.siscap.ws.vwactividadcalendario.cliente.VwActividadCalendarioCallService;
+import pe.gob.mimp.util.EnumFuncionalidad;
 
 @ManagedBean
 @ViewScoped
@@ -59,9 +63,25 @@ public class ScheduleViewAdministrado extends AdministradorAbstracto implements 
     @Inject
     private ActividadGobCallService actividadGobCallService;
 
+    UsuarioAdministrado usuarioAdministrado = (UsuarioAdministrado) getFacesContext().getApplication().createValueBinding("#{usuarioAdministrado}").getValue(getFacesContext());
+    @Inject
+    private RendimientoCallService rendimientoCallService;
+
     @PostConstruct
     public void init() {
-        cargarActividades();
+        try {
+            long startTime = System.currentTimeMillis();
+            cargarActividades();
+            long stopTime = System.currentTimeMillis();
+            rendimientoCallService.crearRendimiento(
+                    SiscapWebUtil.crearRendimiento(
+                            Thread.currentThread().getStackTrace()[1].getMethodName(),
+                            EnumFuncionalidad.CALENDARIO.getNidFuncionalidadBigInteger(),
+                            SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                            usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+            );
+        } catch (Exception e) {
+        }
     }
 
     public ScheduleModel getEventModel() {
@@ -105,6 +125,7 @@ public class ScheduleViewAdministrado extends AdministradorAbstracto implements 
     }
 
     public String obtenerInformacion(Object objecto, String tipo) {
+        long startTime = System.currentTimeMillis();
         AreaAdministrado areaAdministrado = (AreaAdministrado) getFacesContext().getApplication().createValueBinding("#{areaAdministrado}").getValue(getFacesContext());
         StringBuilder informacion = new StringBuilder();
         ActividadGob actividadGob = validarObject(objecto);
@@ -119,6 +140,14 @@ public class ScheduleViewAdministrado extends AdministradorAbstracto implements 
                             .append(" ").append(actividadGob.getTxtResponsableApemat());
                     break;
             }
+            long stopTime = System.currentTimeMillis();
+            rendimientoCallService.crearRendimiento(
+                    SiscapWebUtil.crearRendimiento(
+                            Thread.currentThread().getStackTrace()[1].getMethodName(),
+                            EnumFuncionalidad.CALENDARIO.getNidFuncionalidadBigInteger(),
+                            SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                            usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+            );
         } catch (Exception e) {
             informacion.append("");
         }
@@ -127,6 +156,7 @@ public class ScheduleViewAdministrado extends AdministradorAbstracto implements 
     }
 
     public void cargarActividades() {
+        long startTime = System.currentTimeMillis();
         try {
             loadActividadCalendarioViewList();
             eventModel = new DefaultScheduleModel();
@@ -157,6 +187,15 @@ public class ScheduleViewAdministrado extends AdministradorAbstracto implements 
                     //eventModel.addEvent(new DefaultScheduleEvent(actividadGobierno.getTxtTema(), resetDate(actividadGobierno.getFecInicio(), "am").getTime(), resetDate(actividadGobierno.getFecFin(), "pm").getTime(), actividadGobierno));
                 }
             }
+
+            long stopTime = System.currentTimeMillis();
+            rendimientoCallService.crearRendimiento(
+                    SiscapWebUtil.crearRendimiento(
+                            Thread.currentThread().getStackTrace()[1].getMethodName(),
+                            EnumFuncionalidad.CALENDARIO.getNidFuncionalidadBigInteger(),
+                            SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                            usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+            );
         } catch (Exception e) {
             Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.INFO, "Error cargar actividades", Util.tiempo());
         }
@@ -184,6 +223,7 @@ public class ScheduleViewAdministrado extends AdministradorAbstracto implements 
 
     public void loadActividadCalendarioViewList() {
         logger.info(":: ActividadGobAdministrado.loadActividadCalendarioViewList :: Starting execution...");
+        long startTime = System.currentTimeMillis();
         EstadoActividadGobAdministrado estadoActividadGobAdministrado = (EstadoActividadGobAdministrado) getFacesContext().getApplication().createValueBinding("#{estadoActividadGobAdministrado}").getValue(getFacesContext());
         //ActividadGEAdministrado actividadGEAdministrado = (ActividadGEAdministrado) getFacesContext().getApplication().createValueBinding("#{actividadGEAdministrado}").getValue(getFacesContext());
         try {
@@ -195,13 +235,22 @@ public class ScheduleViewAdministrado extends AdministradorAbstracto implements 
             //parameters.put("flgActivo", CoreConstant.STATUS_ACTIVE);
             this.actividadCalendarioViewList = vwActividadCalendarioCallService.loadVwActividadCalendarioList(new FindByParamBean(parameters, "nidActividadG"));
 
+            long stopTime = System.currentTimeMillis();
+            rendimientoCallService.crearRendimiento(
+                    SiscapWebUtil.crearRendimiento(
+                            Thread.currentThread().getStackTrace()[1].getMethodName(),
+                            EnumFuncionalidad.CALENDARIO.getNidFuncionalidadBigInteger(),
+                            SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                            usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+            );
         } catch (Exception e) {
             Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.INFO, "Error loadActividadGobList" + e.getMessage(), Util.tiempo());
         }
         logger.info(":: ActividadGobAdministrado.loadActividadCalendarioViewList :: Execution finish.");
     }
 
-    public void getReportData() throws IOException, InvalidFormatException {
+    public void getReportData() throws IOException, InvalidFormatException, Exception {
+        long startTime = System.currentTimeMillis();
         String[] columns = {"TEMA", "UNIDAD ORGANICA", "GOBIERNO", "FECHA INICIO", "FECHA FIN"};
         Workbook workbook = new XSSFWorkbook();
 
@@ -247,7 +296,7 @@ public class ScheduleViewAdministrado extends AdministradorAbstracto implements 
                     .setCellValue(actividadCalendarioView.getTxtArea());
             row.createCell(2)
                     .setCellValue(actividadCalendarioView.getTxtGobierno());
-            
+
             Cell fechaInicio = row.createCell(3);
             fechaInicio.setCellValue(actividadCalendarioView.getFecInicio());
             fechaInicio.setCellStyle(dateCellStyle);
@@ -295,6 +344,15 @@ public class ScheduleViewAdministrado extends AdministradorAbstracto implements 
          // Build XLS content here.
          workbook.write(output);
          workbook.close();*/
+
+        long stopTime = System.currentTimeMillis();
+        rendimientoCallService.crearRendimiento(
+                SiscapWebUtil.crearRendimiento(
+                        Thread.currentThread().getStackTrace()[1].getMethodName(),
+                        EnumFuncionalidad.CALENDARIO.getNidFuncionalidadBigInteger(),
+                        SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                        usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+        );
     }
 
 }

@@ -22,13 +22,20 @@ import pe.gob.mimp.core.Internet;
 import pe.gob.mimp.core.Util;
 import pe.gob.mimp.siscap.modelo.FuncionTransferida;
 import pe.gob.mimp.siscap.modelo.TipoFuncion;
+import pe.gob.mimp.siscap.util.SiscapWebUtil;
 import pe.gob.mimp.siscap.ws.funciontransferida.cliente.FuncionTransferidaCallService;
+import pe.gob.mimp.siscap.ws.rendimiento.cliente.RendimientoCallService;
 import pe.gob.mimp.siscap.ws.tipofuncion.cliente.TipoFuncionCallService;
+import pe.gob.mimp.util.EnumFuncionalidad;
 import pe.gob.mimp.utils.Funciones;
 
 @ManagedBean
 @ViewScoped
 public class FuncionTransferidaAdministrado extends AdministradorAbstracto implements Serializable {
+
+    UsuarioAdministrado usuarioAdministrado = (UsuarioAdministrado) getFacesContext().getApplication().createValueBinding("#{usuarioAdministrado}").getValue(getFacesContext());
+    @Inject
+    private RendimientoCallService rendimientoCallService;
 
     private Logger logger = Logger.getLogger(FuncionTransferida.class.getName());
     private static final long serialVersionUID = 1L;
@@ -48,6 +55,7 @@ public class FuncionTransferidaAdministrado extends AdministradorAbstracto imple
     @PostConstruct
     public void initBean() {
         logger.info(":: FuncionTransferidaAdministrado.initBean :: Starting execution...");
+        long startTime = System.currentTimeMillis();
         try {
             this.entidadSeleccionada = new FuncionTransferida();
             this.entidadSeleccionada.setNidTipoFuncion(new TipoFuncion());
@@ -62,6 +70,14 @@ public class FuncionTransferidaAdministrado extends AdministradorAbstracto imple
 
             this.tipoFuncionList = tipoFuncionCallService.loadTipoFuncionList(findByParamBean);
 
+            long stopTime = System.currentTimeMillis();
+            rendimientoCallService.crearRendimiento(
+                    SiscapWebUtil.crearRendimiento(
+                            Thread.currentThread().getStackTrace()[1].getMethodName(),
+                            EnumFuncionalidad.FUNCION_TRANSFERIDA.getNidFuncionalidadBigInteger(),
+                            SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                            usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+            );
         } catch (Exception e) {
             Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.INFO, "Error method initBean" + e.getMessage(), Util.tiempo());
         }
@@ -93,10 +109,24 @@ public class FuncionTransferidaAdministrado extends AdministradorAbstracto imple
     }
 
     public FuncionTransferida getEntidad(String id) {
+        long startTime = System.currentTimeMillis();
         FuncionTransferida funcionTransferida = null;
 
-        if ((null != id) || (false == id.equals(""))) {
-            funcionTransferida = funcionTransferidaCallService.find(new BigDecimal(id));
+        try {
+            if ((null != id) || (false == id.equals(""))) {
+                funcionTransferida = funcionTransferidaCallService.find(new BigDecimal(id));
+            }
+            long stopTime = System.currentTimeMillis();
+            rendimientoCallService.crearRendimiento(
+                    SiscapWebUtil.crearRendimiento(
+                            Thread.currentThread().getStackTrace()[1].getMethodName(),
+                            EnumFuncionalidad.FUNCION_TRANSFERIDA.getNidFuncionalidadBigInteger(),
+                            SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                            usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+            );
+
+        } catch (Exception e) {
+            Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.INFO, "Error getEntidad" + e.getMessage(), Util.tiempo());
         }
         return funcionTransferida;
     }
@@ -118,6 +148,7 @@ public class FuncionTransferidaAdministrado extends AdministradorAbstracto imple
     }
 
     public boolean validarFormulario(boolean isNuevo) {
+        long startTime = System.currentTimeMillis();
         try {
             if (Funciones.esVacio(this.entidadSeleccionada.getTxtFuncionTransferida().toUpperCase())) {
                 return enviarWarnMessage("Ingrese el Descripción.");
@@ -143,6 +174,14 @@ public class FuncionTransferidaAdministrado extends AdministradorAbstracto imple
             if (Funciones.esVacio(this.entidadSeleccionada.getNidTipoFuncion()) || Funciones.esVacio(this.entidadSeleccionada.getNidTipoFuncion().getNidTipoFuncion())) {
                 return enviarWarnMessage("Seleccione el Tipo Funcion");
             }
+            long stopTime = System.currentTimeMillis();
+            rendimientoCallService.crearRendimiento(
+                    SiscapWebUtil.crearRendimiento(
+                            Thread.currentThread().getStackTrace()[1].getMethodName(),
+                            EnumFuncionalidad.FUNCION_TRANSFERIDA.getNidFuncionalidadBigInteger(),
+                            SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                            usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+            );
             return true;
         } catch (Exception e) {
             Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.INFO, "Error validarFormulario" + e.getMessage(), Util.tiempo());
@@ -157,6 +196,7 @@ public class FuncionTransferidaAdministrado extends AdministradorAbstracto imple
 
     public void crearFuncionTransferida() {
         logger.info(":: FuncionTransferidaAdministrado.crearFuncionTransferida() :: Starting execution...");
+        long startTime = System.currentTimeMillis();
         if (validarFormulario(true)) {
             try {
                 UsuarioAdministrado usuarioAdministrado = (UsuarioAdministrado) getFacesContext().getApplication().createValueBinding("#{usuarioAdministrado}").getValue(getFacesContext());
@@ -177,6 +217,14 @@ public class FuncionTransferidaAdministrado extends AdministradorAbstracto imple
                 loadFuncionList();
                 RequestContext.getCurrentInstance().execute("PF('dialogoNuevoFuncion').hide()");
 //                }
+                long stopTime = System.currentTimeMillis();
+                rendimientoCallService.crearRendimiento(
+                        SiscapWebUtil.crearRendimiento(
+                                Thread.currentThread().getStackTrace()[1].getMethodName(),
+                                EnumFuncionalidad.FUNCION_TRANSFERIDA.getNidFuncionalidadBigInteger(),
+                                SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                                usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+                );
             } catch (Exception e) {
                 Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.INFO, "Error crearFuncionTransferida" + e.getMessage(), Util.tiempo());
             }
@@ -186,6 +234,7 @@ public class FuncionTransferidaAdministrado extends AdministradorAbstracto imple
 
     public void editarFuncionTransferida(FuncionTransferida entidadSeleccionada) {
         logger.info(":: FuncionTransferidaAdministrado.editarFuncionTransferida() :: Starting execution...");
+        long startTime = System.currentTimeMillis();
         if (validarFormulario(false)) {
             try {
                 UsuarioAdministrado usuarioAdministrado = (UsuarioAdministrado) getFacesContext().getApplication().createValueBinding("#{usuarioAdministrado}").getValue(getFacesContext());
@@ -199,6 +248,14 @@ public class FuncionTransferidaAdministrado extends AdministradorAbstracto imple
                     loadFuncionList();
                     RequestContext.getCurrentInstance().execute("PF('dialogoEditarFuncion').hide()");
                 }
+                long stopTime = System.currentTimeMillis();
+                rendimientoCallService.crearRendimiento(
+                        SiscapWebUtil.crearRendimiento(
+                                Thread.currentThread().getStackTrace()[1].getMethodName(),
+                                EnumFuncionalidad.FUNCION_TRANSFERIDA.getNidFuncionalidadBigInteger(),
+                                SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                                usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+                );
             } catch (Exception e) {
                 Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.INFO, "Error editarFuncionTransferida" + e.getMessage(), Util.tiempo());
             }
@@ -208,6 +265,7 @@ public class FuncionTransferidaAdministrado extends AdministradorAbstracto imple
 
     public void anularFuncionTransferida(FuncionTransferida entidadSeleccionada) {
         logger.info(":: FuncionTransferidaAdministrado.anularFuncionTransferida() :: Starting execution...");
+        long startTime = System.currentTimeMillis();
         try {
             UsuarioAdministrado usuarioAdministrado = (UsuarioAdministrado) getFacesContext().getApplication().createValueBinding("#{usuarioAdministrado}").getValue(getFacesContext());
             if (null != entidadSeleccionada) {
@@ -220,6 +278,14 @@ public class FuncionTransferidaAdministrado extends AdministradorAbstracto imple
                 // Update List Browser
                 loadFuncionList();
             }
+            long stopTime = System.currentTimeMillis();
+            rendimientoCallService.crearRendimiento(
+                    SiscapWebUtil.crearRendimiento(
+                            Thread.currentThread().getStackTrace()[1].getMethodName(),
+                            EnumFuncionalidad.FUNCION_TRANSFERIDA.getNidFuncionalidadBigInteger(),
+                            SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                            usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+            );
         } catch (Exception e) {
             Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.INFO, "Error anularFuncionTransferida" + e.getMessage(), Util.tiempo());
         }
@@ -229,6 +295,7 @@ public class FuncionTransferidaAdministrado extends AdministradorAbstracto imple
     public String obtenerFuncionTransferidaporId(BigInteger nidFuncionTransferida) {
         String resultado = "";
 
+        long startTime = System.currentTimeMillis();
         try {
             if (null != nidFuncionTransferida) {
                 FuncionTransferida funcionTransferida = funcionTransferidaCallService.find(new BigDecimal(nidFuncionTransferida));
@@ -237,6 +304,14 @@ public class FuncionTransferidaAdministrado extends AdministradorAbstracto imple
                     resultado = funcionTransferida.getTxtFuncionTransferida();
                 }
             }
+            long stopTime = System.currentTimeMillis();
+            rendimientoCallService.crearRendimiento(
+                    SiscapWebUtil.crearRendimiento(
+                            Thread.currentThread().getStackTrace()[1].getMethodName(),
+                            EnumFuncionalidad.FUNCION_TRANSFERIDA.getNidFuncionalidadBigInteger(),
+                            SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                            usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+            );
         } catch (Exception e) {
             Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.INFO, "{0}Obtener Funcion Transferida" + e.getMessage(), Util.tiempo());
         }
@@ -262,8 +337,9 @@ public class FuncionTransferidaAdministrado extends AdministradorAbstracto imple
         logger.info(":: FuncionTransferidaAdministrado.limpiarFuncionTransferida :: Starting execution...");
     }
 
-    private void loadFuncionList() {
+    private void loadFuncionList() throws Exception {
         logger.info(":: FuncionTransferidaAdministrado.loadFuncionList :: Starting execution...");
+        long startTime = System.currentTimeMillis();
         Map<String, Object> parameters = new HashMap<>();
         //parameters.put("flgActivo", CoreConstant.STATUS_ACTIVE);
 
@@ -272,6 +348,14 @@ public class FuncionTransferidaAdministrado extends AdministradorAbstracto imple
         findByParamBean.setOrderBy("nidFuncionTransferida");
 
         this.funcionTransferidaList = funcionTransferidaCallService.loadFuncionTransferidaList(findByParamBean);
+        long stopTime = System.currentTimeMillis();
+        rendimientoCallService.crearRendimiento(
+                SiscapWebUtil.crearRendimiento(
+                        Thread.currentThread().getStackTrace()[1].getMethodName(),
+                        EnumFuncionalidad.FUNCION_TRANSFERIDA.getNidFuncionalidadBigInteger(),
+                        SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                        usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+        );
         logger.info(":: FuncionTransferidaAdministrado.loadFuncionList :: Execution finish.");
     }
 }

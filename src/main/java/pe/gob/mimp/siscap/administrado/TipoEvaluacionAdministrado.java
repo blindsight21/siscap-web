@@ -17,7 +17,10 @@ import javax.inject.Inject;
 import pe.gob.mimp.bean.FindByParamBean;
 import pe.gob.mimp.core.Util;
 import pe.gob.mimp.siscap.modelo.TipoEvaluacion;
+import pe.gob.mimp.siscap.util.SiscapWebUtil;
+import pe.gob.mimp.siscap.ws.rendimiento.cliente.RendimientoCallService;
 import pe.gob.mimp.siscap.ws.tipoevaluacion.cliente.TipoEvaluacionCallService;
+import pe.gob.mimp.util.EnumFuncionalidad;
 
 @ManagedBean
 @ViewScoped
@@ -33,6 +36,8 @@ public class TipoEvaluacionAdministrado extends AdministradorAbstracto implement
     private TipoEvaluacionCallService tipoEvaluacionCallService;
 
     UsuarioAdministrado usuarioAdministrado = (UsuarioAdministrado) getFacesContext().getApplication().createValueBinding("#{usuarioAdministrado}").getValue(getFacesContext());
+    @Inject
+    private RendimientoCallService rendimientoCallService;
 
     public TipoEvaluacionAdministrado() {
 
@@ -61,17 +66,30 @@ public class TipoEvaluacionAdministrado extends AdministradorAbstracto implement
     }
 
     public TipoEvaluacion getEntidad(String id) {
+        long startTime = System.currentTimeMillis();
         TipoEvaluacion tipoEvaluacion = null;
 
-        if ((null != id) || (false == id.equals(""))) {
-            tipoEvaluacion = tipoEvaluacionCallService.find(new BigDecimal(id));
+        try {
+            if ((null != id) || (false == id.equals(""))) {
+                tipoEvaluacion = tipoEvaluacionCallService.find(new BigDecimal(id));
+            }
+            long stopTime = System.currentTimeMillis();
+            rendimientoCallService.crearRendimiento(
+                    SiscapWebUtil.crearRendimiento(
+                            Thread.currentThread().getStackTrace()[1].getMethodName(),
+                            EnumFuncionalidad.ACTIVIDADES.getNidFuncionalidadBigInteger(),
+                            SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                            usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+            );
+        } catch (Exception e) {
+            Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.INFO, "Error getEntidad" + e.getMessage(), Util.tiempo());
         }
         return tipoEvaluacion;
     }
 
-    public String obtenerTipoEvaluacionporId(BigInteger nidTipoEvaluacion) {
+    public String obtenerTipoEvaluacionporId(BigInteger nidTipoEvaluacion) throws Exception {
         String resultado = "";
-
+        long startTime = System.currentTimeMillis();
         try {
             if (null != nidTipoEvaluacion) {
                 TipoEvaluacion tipoEvaluacion = tipoEvaluacionCallService.find(new BigDecimal(nidTipoEvaluacion));
@@ -83,17 +101,38 @@ public class TipoEvaluacionAdministrado extends AdministradorAbstracto implement
         } catch (Exception e) {
             Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.INFO, "{0}Obtener Tipo Evaluacion" + e.getMessage(), Util.tiempo());
         }
+        long stopTime = System.currentTimeMillis();
+        rendimientoCallService.crearRendimiento(
+                SiscapWebUtil.crearRendimiento(
+                        Thread.currentThread().getStackTrace()[1].getMethodName(),
+                        EnumFuncionalidad.ACTIVIDADES.getNidFuncionalidadBigInteger(),
+                        SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                        usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+        );
         return resultado;
     }
 
     private void loadTipoEvaluacionList() {
         logger.info(":: TipoEvaluacionAdministrado.loadTipoEvaluacionList :: Starting execution...");
-        Map<String, Object> parameters = new HashMap<>();
+        try {
+            long startTime = System.currentTimeMillis();
+            Map<String, Object> parameters = new HashMap<>();
 
-        FindByParamBean findByParamBean = new FindByParamBean();
-        findByParamBean.setParameters(parameters);
-        findByParamBean.setOrderBy("nidTipoEvaluacion");
-        this.tipoEvaluacionList = tipoEvaluacionCallService.loadTipoEvaluacionList(findByParamBean);
+            FindByParamBean findByParamBean = new FindByParamBean();
+            findByParamBean.setParameters(parameters);
+            findByParamBean.setOrderBy("nidTipoEvaluacion");
+            this.tipoEvaluacionList = tipoEvaluacionCallService.loadTipoEvaluacionList(findByParamBean);
+            long stopTime = System.currentTimeMillis();
+            rendimientoCallService.crearRendimiento(
+                    SiscapWebUtil.crearRendimiento(
+                            Thread.currentThread().getStackTrace()[1].getMethodName(),
+                            EnumFuncionalidad.ACTIVIDADES.getNidFuncionalidadBigInteger(),
+                            SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                            usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+            );
+        } catch (Exception e) {
+            
+        }
         logger.info(":: TipoEvaluacionAdministrado.loadTipoEvaluacionList :: Execution finish.");
     }
 

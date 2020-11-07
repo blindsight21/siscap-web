@@ -20,12 +20,15 @@ import pe.gob.mimp.siscap.modelo.CorreoPersonaSiscap;
 import pe.gob.mimp.siscap.modelo.Participante;
 import pe.gob.mimp.siscap.modelo.PersonaSiscap;
 import pe.gob.mimp.siscap.modelo.TelefonoPersonaSiscap;
+import pe.gob.mimp.siscap.util.SiscapWebUtil;
 import pe.gob.mimp.siscap.ws.actividadgob.cliente.ActividadGobCallService;
 import pe.gob.mimp.siscap.ws.correopersonasiscap.cliente.CorreoPersonaSiscapCallService;
 import pe.gob.mimp.siscap.ws.participante.cliente.ParticipanteCallService;
 import pe.gob.mimp.siscap.ws.personasiscap.cliente.PersonaSiscapCallService;
+import pe.gob.mimp.siscap.ws.rendimiento.cliente.RendimientoCallService;
 import pe.gob.mimp.siscap.ws.telefonopersonasiscap.cliente.TelefonoPersonaSiscapCallService;
 import pe.gob.mimp.siscap.ws.tipodocumento.cliente.TipoDocumentoCallService;
+import pe.gob.mimp.util.EnumFuncionalidad;
 
 @SuppressWarnings("serial")
 @ManagedBean
@@ -57,6 +60,8 @@ public class PersonaSiscapAdministrado extends AdministradorAbstracto implements
     private ActividadGobCallService actividadGobCallService;
 
     UsuarioAdministrado usuarioAdministrado = (UsuarioAdministrado) getFacesContext().getApplication().createValueBinding("#{usuarioAdministrado}").getValue(getFacesContext());
+    @Inject
+    private RendimientoCallService rendimientoCallService;
 
     public PersonaSiscapAdministrado() {
 
@@ -112,13 +117,22 @@ public class PersonaSiscapAdministrado extends AdministradorAbstracto implements
         this.entidades = entidades;
     }
 
-    public PersonaSiscap getEntidad(String id) {
+    public PersonaSiscap getEntidad(String id) throws Exception {
+        long startTime = System.currentTimeMillis();
         PersonaSiscap personaSiscap = null;
 
         if ((null != id) && (false == id.equals(""))) {
             personaSiscap = personaSiscapCallService.find(new BigDecimal(id));
         }
 
+        long stopTime = System.currentTimeMillis();
+        rendimientoCallService.crearRendimiento(
+                SiscapWebUtil.crearRendimiento(
+                        Thread.currentThread().getStackTrace()[1].getMethodName(),
+                        EnumFuncionalidad.ACTIVIDADES.getNidFuncionalidadBigInteger(),
+                        SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                        usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+        );
         return personaSiscap;
     }
 
@@ -148,7 +162,8 @@ public class PersonaSiscapAdministrado extends AdministradorAbstracto implements
         return personaSiscap;
     }
 
-    public List<TipoDocumento> obtenerTiposDocumentoParticipante() {
+    public List<TipoDocumento> obtenerTiposDocumentoParticipante() throws Exception {
+        long startTime = System.currentTimeMillis();
         List<TipoDocumento> tiposDocumento = tipoDocumentoCallService.findAll();
         List<TipoDocumento> tiposDocumentoPersonaNatural = new ArrayList<TipoDocumento>();
 
@@ -163,6 +178,14 @@ public class PersonaSiscapAdministrado extends AdministradorAbstracto implements
                 tiposDocumentoPersonaNatural.add(tipo);
             }
         }
+        long stopTime = System.currentTimeMillis();
+        rendimientoCallService.crearRendimiento(
+                SiscapWebUtil.crearRendimiento(
+                        Thread.currentThread().getStackTrace()[1].getMethodName(),
+                        EnumFuncionalidad.ACTIVIDADES.getNidFuncionalidadBigInteger(),
+                        SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                        usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+        );
         return tiposDocumentoPersonaNatural;
     }
 
@@ -208,9 +231,8 @@ public class PersonaSiscapAdministrado extends AdministradorAbstracto implements
         tipoDocumentoAdministrado.setEntidadSeleccionada(new TipoDocumento());
         this.entidadSeleccionada = new PersonaSiscap();
     }*/
-
     public void crearPersonaSiscap() {
-
+        long startTime = System.currentTimeMillis();
         try {
 
             if (null != this.getEntidadSeleccionada()) {
@@ -276,6 +298,14 @@ public class PersonaSiscapAdministrado extends AdministradorAbstracto implements
                     }
                 }
             }
+            long stopTime = System.currentTimeMillis();
+            rendimientoCallService.crearRendimiento(
+                    SiscapWebUtil.crearRendimiento(
+                            Thread.currentThread().getStackTrace()[1].getMethodName(),
+                            EnumFuncionalidad.ACTIVIDADES.getNidFuncionalidadBigInteger(),
+                            SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                            usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+            );
         } catch (Exception e) {
             Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.SEVERE, null, e);
         }

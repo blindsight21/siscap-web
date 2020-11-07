@@ -21,12 +21,19 @@ import pe.gob.mimp.constant.CoreConstant;
 import pe.gob.mimp.core.Internet;
 import pe.gob.mimp.core.Util;
 import pe.gob.mimp.siscap.modelo.TipoFuncion;
+import pe.gob.mimp.siscap.util.SiscapWebUtil;
+import pe.gob.mimp.siscap.ws.rendimiento.cliente.RendimientoCallService;
 import pe.gob.mimp.siscap.ws.tipofuncion.cliente.TipoFuncionCallService;
+import pe.gob.mimp.util.EnumFuncionalidad;
 import pe.gob.mimp.utils.Funciones;
 
 @ManagedBean
 @ViewScoped
 public class TipoFuncionAdministrado extends AdministradorAbstracto implements Serializable {
+
+    UsuarioAdministrado usuarioAdministrado = (UsuarioAdministrado) getFacesContext().getApplication().createValueBinding("#{usuarioAdministrado}").getValue(getFacesContext());
+    @Inject
+    private RendimientoCallService rendimientoCallService;
 
     private Logger logger = Logger.getLogger(TipoFuncion.class.getName());
     private static final long serialVersionUID = 1L;
@@ -43,8 +50,23 @@ public class TipoFuncionAdministrado extends AdministradorAbstracto implements S
 
     @PostConstruct
     public void initBean() {
-        this.entidadSeleccionada = new TipoFuncion();
-        loadTipoFuncionList();
+        try {
+            long startTime = System.currentTimeMillis();
+            
+            this.entidadSeleccionada = new TipoFuncion();
+            loadTipoFuncionList();
+            long stopTime = System.currentTimeMillis();
+            
+            rendimientoCallService.crearRendimiento(
+                    SiscapWebUtil.crearRendimiento(
+                            Thread.currentThread().getStackTrace()[1].getMethodName(),
+                            EnumFuncionalidad.TIPO_FUNCION.getNidFuncionalidadBigInteger(),
+                            SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                            usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+            );
+        } catch (Exception e) {
+
+        }
     }
 
     public TipoFuncion getEntidadSeleccionada() {
@@ -64,16 +86,30 @@ public class TipoFuncionAdministrado extends AdministradorAbstracto implements S
     }
 
     public TipoFuncion getEntidad(String id) {
+        long startTime = System.currentTimeMillis();
         TipoFuncion tipoFuncion = null;
 
-        if ((null != id) || (false == id.equals(""))) {
-            tipoFuncion = tipoFuncionCallService.find(new BigDecimal(id));
+        try {
+            if ((null != id) || (false == id.equals(""))) {
+                tipoFuncion = tipoFuncionCallService.find(new BigDecimal(id));
+            }
+            long stopTime = System.currentTimeMillis();
+            rendimientoCallService.crearRendimiento(
+                    SiscapWebUtil.crearRendimiento(
+                            Thread.currentThread().getStackTrace()[1].getMethodName(),
+                            EnumFuncionalidad.TIPO_FUNCION.getNidFuncionalidadBigInteger(),
+                            SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                            usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+            );
+        } catch (Exception e) {
+            Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.INFO, "Error getEntidad" + e.getMessage(), Util.tiempo());
         }
         return tipoFuncion;
     }
 
     public boolean validarFormulario(boolean isNuevo) {
         try {
+            long startTime = System.currentTimeMillis();
             if (Funciones.esVacio(this.entidadSeleccionada.getTxtTipoFuncion().toUpperCase())) {
                 return enviarWarnMessage("Ingrese el Descripción.");
             } else {
@@ -91,6 +127,14 @@ public class TipoFuncionAdministrado extends AdministradorAbstracto implements S
                     }
                 }
             }
+            long stopTime = System.currentTimeMillis();
+            rendimientoCallService.crearRendimiento(
+                    SiscapWebUtil.crearRendimiento(
+                            Thread.currentThread().getStackTrace()[1].getMethodName(),
+                            EnumFuncionalidad.TIPO_FUNCION.getNidFuncionalidadBigInteger(),
+                            SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                            usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+            );
             return true;
         } catch (Exception e) {
             Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.INFO, "Error validarFormulario" + e.getMessage(), Util.tiempo());
@@ -105,6 +149,7 @@ public class TipoFuncionAdministrado extends AdministradorAbstracto implements S
 
     public void crearTipoFuncion() {
         logger.info(":: TipoFuncionAdministrado.crearTipoObjetivo() :: Starting execution...");
+        long startTime = System.currentTimeMillis();
         if (validarFormulario(true)) {
             try {
                 UsuarioAdministrado usuarioAdministrado = (UsuarioAdministrado) getFacesContext().getApplication().createValueBinding("#{usuarioAdministrado}").getValue(getFacesContext());
@@ -123,6 +168,14 @@ public class TipoFuncionAdministrado extends AdministradorAbstracto implements S
                 loadTipoFuncionList();
                 RequestContext.getCurrentInstance().execute("PF('dialogoNuevoTipoFuncion').hide()");
 //                }
+                long stopTime = System.currentTimeMillis();
+                rendimientoCallService.crearRendimiento(
+                        SiscapWebUtil.crearRendimiento(
+                                Thread.currentThread().getStackTrace()[1].getMethodName(),
+                                EnumFuncionalidad.TIPO_FUNCION.getNidFuncionalidadBigInteger(),
+                                SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                                usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+                );
             } catch (Exception e) {
                 Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.INFO, "Error crearTipoFuncion" + e.getMessage(), Util.tiempo());
             }
@@ -132,6 +185,7 @@ public class TipoFuncionAdministrado extends AdministradorAbstracto implements S
 
     public void editarTipoFuncion(TipoFuncion entidadSeleccionada) {
         logger.info(":: TipoFuncionAdministrado.editarTipoFuncion() :: Starting execution...");
+        long startTime = System.currentTimeMillis();
         if (validarFormulario(false)) {
             try {
                 UsuarioAdministrado usuarioAdministrado = (UsuarioAdministrado) getFacesContext().getApplication().createValueBinding("#{usuarioAdministrado}").getValue(getFacesContext());
@@ -145,6 +199,14 @@ public class TipoFuncionAdministrado extends AdministradorAbstracto implements S
                     loadTipoFuncionList();
                     RequestContext.getCurrentInstance().execute("PF('dialogoEditarTipoFuncion').hide()");
                 }
+                long stopTime = System.currentTimeMillis();
+                rendimientoCallService.crearRendimiento(
+                        SiscapWebUtil.crearRendimiento(
+                                Thread.currentThread().getStackTrace()[1].getMethodName(),
+                                EnumFuncionalidad.TIPO_FUNCION.getNidFuncionalidadBigInteger(),
+                                SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                                usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+                );
             } catch (Exception e) {
                 Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.INFO, "Error editarTipoFuncion" + e.getMessage(), Util.tiempo());
             }
@@ -154,6 +216,7 @@ public class TipoFuncionAdministrado extends AdministradorAbstracto implements S
 
     public void anularTipoFuncion(TipoFuncion entidadSeleccionada) {
         logger.info(":: TipoFuncionAdministrado.anularTipoFuncion() :: Starting execution...");
+        long startTime = System.currentTimeMillis();
         try {
             UsuarioAdministrado usuarioAdministrado = (UsuarioAdministrado) getFacesContext().getApplication().createValueBinding("#{usuarioAdministrado}").getValue(getFacesContext());
             if (null != entidadSeleccionada) {
@@ -166,6 +229,14 @@ public class TipoFuncionAdministrado extends AdministradorAbstracto implements S
                 // Update List Browser
                 loadTipoFuncionList();
             }
+            long stopTime = System.currentTimeMillis();
+            rendimientoCallService.crearRendimiento(
+                    SiscapWebUtil.crearRendimiento(
+                            Thread.currentThread().getStackTrace()[1].getMethodName(),
+                            EnumFuncionalidad.TIPO_FUNCION.getNidFuncionalidadBigInteger(),
+                            SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                            usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+            );
         } catch (Exception e) {
             Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.INFO, "Error anularTipoFuncion" + e.getMessage(), Util.tiempo());
         }
@@ -174,7 +245,7 @@ public class TipoFuncionAdministrado extends AdministradorAbstracto implements S
 
     public String obtenerTipoModalidadporId(BigInteger nidTipoFuncion) {
         String resultado = "";
-
+        long startTime = System.currentTimeMillis();
         try {
             if (null != nidTipoFuncion) {
                 TipoFuncion tipoFuncion = tipoFuncionCallService.find(new BigDecimal(nidTipoFuncion));
@@ -183,6 +254,14 @@ public class TipoFuncionAdministrado extends AdministradorAbstracto implements S
                     resultado = tipoFuncion.getTxtTipoFuncion();
                 }
             }
+            long stopTime = System.currentTimeMillis();
+            rendimientoCallService.crearRendimiento(
+                    SiscapWebUtil.crearRendimiento(
+                            Thread.currentThread().getStackTrace()[1].getMethodName(),
+                            EnumFuncionalidad.TIPO_FUNCION.getNidFuncionalidadBigInteger(),
+                            SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                            usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+            );
         } catch (Exception e) {
             Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.INFO, "{0}Obtener Tipo Funcion" + e.getMessage(), Util.tiempo());
         }
@@ -194,15 +273,24 @@ public class TipoFuncionAdministrado extends AdministradorAbstracto implements S
         this.entidadSeleccionada = new TipoFuncion();
     }
 
-    private void loadTipoFuncionList() {
+    private void loadTipoFuncionList() throws Exception {
         logger.info(":: TipoFuncionAdministrado.loadTipoFuncionList :: Starting execution...");
+        long startTime = System.currentTimeMillis();
         Map<String, Object> parameters = new HashMap<>();
         //parameters.put("flgActivo", CoreConstant.STATUS_ACTIVE);
-        
+
         FindByParamBean findByParamBean = new FindByParamBean();
         findByParamBean.setParameters(parameters);
         findByParamBean.setOrderBy("nidTipoFuncion");
         this.tipoFuncionList = tipoFuncionCallService.loadTipoFuncionList(findByParamBean);
+        long stopTime = System.currentTimeMillis();
+        rendimientoCallService.crearRendimiento(
+                SiscapWebUtil.crearRendimiento(
+                        Thread.currentThread().getStackTrace()[1].getMethodName(),
+                        EnumFuncionalidad.TIPO_FUNCION.getNidFuncionalidadBigInteger(),
+                        SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                        usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+        );
         logger.info(":: TipoFuncionAdministrado.loadTipoFuncionList :: Execution finish.");
     }
 

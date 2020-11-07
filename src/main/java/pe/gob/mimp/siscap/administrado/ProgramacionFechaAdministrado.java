@@ -22,12 +22,19 @@ import pe.gob.mimp.general.administrado.AdministradorAbstracto;
 import pe.gob.mimp.seguridad.administrado.UsuarioAdministrado;
 import pe.gob.mimp.siscap.modelo.EstadoActividadGob;
 import pe.gob.mimp.siscap.modelo.ProgramacionFecha;
+import pe.gob.mimp.siscap.util.SiscapWebUtil;
 import pe.gob.mimp.siscap.ws.programacionfecha.cliente.ProgramacionFechaCallService;
+import pe.gob.mimp.siscap.ws.rendimiento.cliente.RendimientoCallService;
+import pe.gob.mimp.util.EnumFuncionalidad;
 import pe.gob.mimp.utils.Funciones;
 
 @ManagedBean
 @ViewScoped
 public class ProgramacionFechaAdministrado extends AdministradorAbstracto implements Serializable {
+
+    UsuarioAdministrado usuarioAdministrado = (UsuarioAdministrado) getFacesContext().getApplication().createValueBinding("#{usuarioAdministrado}").getValue(getFacesContext());
+    @Inject
+    private RendimientoCallService rendimientoCallService;
 
     private Logger logger = Logger.getLogger(ProgramacionFecha.class.getName());
     private static final long serialVersionUID = 1L;
@@ -40,8 +47,22 @@ public class ProgramacionFechaAdministrado extends AdministradorAbstracto implem
 
     @PostConstruct
     public void initBean() {
-        this.entidadSeleccionada = new ProgramacionFecha();
-        loadProgramacionFechaList();
+        try {
+            long startTime = System.currentTimeMillis();
+
+            this.entidadSeleccionada = new ProgramacionFecha();
+            loadProgramacionFechaList();
+
+            long stopTime = System.currentTimeMillis();
+            rendimientoCallService.crearRendimiento(
+                    SiscapWebUtil.crearRendimiento(
+                            Thread.currentThread().getStackTrace()[1].getMethodName(),
+                            EnumFuncionalidad.PROGRAMACION_FECHAS.getNidFuncionalidadBigInteger(),
+                            SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                            usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+            );
+        } catch (Exception e) {
+        }
     }
 
     public ProgramacionFecha getEntidadSeleccionada() {
@@ -71,6 +92,7 @@ public class ProgramacionFechaAdministrado extends AdministradorAbstracto implem
     }
 
     public boolean validarFormulario(boolean isNuevo) {
+        long startTime = System.currentTimeMillis();
         EstadoActividadGobAdministrado estadoActividadGobAdministrado = (EstadoActividadGobAdministrado) getFacesContext().getApplication().createValueBinding("#{estadoActividadGobAdministrado}").getValue(getFacesContext());
         ActividadGobAdministrado actividadGobAdministrado = (ActividadGobAdministrado) getFacesContext().getApplication().createValueBinding("#{actividadGobAdministrado}").getValue(getFacesContext());
 
@@ -85,11 +107,11 @@ public class ProgramacionFechaAdministrado extends AdministradorAbstracto implem
                 return enviarWarnMessage("Ingrese la fecha de inicio");
             } else if (Funciones.esVacio(this.entidadSeleccionada.getFecFin())) {
                 return enviarWarnMessage("Ingrese la fecha de fin");
-            /*} else if (this.entidadSeleccionada.getFecInicio().after(this.entidadSeleccionada.getFecFin())) {
+                /*} else if (this.entidadSeleccionada.getFecInicio().after(this.entidadSeleccionada.getFecFin())) {
                 return enviarWarnMessage("La fecha de inicio debe ser menor o igual a la fecha fin");*/
             } else if (Funciones.esVacio(estadoActividadGobAdministrado.getEntidadSeleccionada().getNidEstadoActividadGob())) {
                 return enviarWarnMessage("Seleccione el estado de la actividad");
-            /*} else if (!this.getEntidadSeleccionada().getTxtAnio().equals(anioActual)) {
+                /*} else if (!this.getEntidadSeleccionada().getTxtAnio().equals(anioActual)) {
                 return enviarWarnMessage("Solo puede programar fechas del presente año: " + anioActual);*/
             } else {
                 if (isNuevo) {
@@ -101,6 +123,14 @@ public class ProgramacionFechaAdministrado extends AdministradorAbstracto implem
 
                     //Si el tipo de actividad seleccionado es igual a programado
                     if (estadoActividadGobAdministrado.getEntidadSeleccionada().getNidEstadoActividadGob().toBigInteger().equals(BigInteger.valueOf(2))) {
+                        long stopTime = System.currentTimeMillis();
+                        rendimientoCallService.crearRendimiento(
+                                SiscapWebUtil.crearRendimiento(
+                                        Thread.currentThread().getStackTrace()[1].getMethodName(),
+                                        EnumFuncionalidad.PROGRAMACION_FECHAS.getNidFuncionalidadBigInteger(),
+                                        SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                                        usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+                        );
                         return true;
                     } else {
                         int count = programacionFechaCallService.getRecordCount(new FindByParamBean(parameters, ""));
@@ -114,14 +144,38 @@ public class ProgramacionFechaAdministrado extends AdministradorAbstracto implem
                                 if (this.getEntidadSeleccionada().getFecInicio().before(programacionFecha.getFecFin())) {
                                     return enviarWarnMessage("La nueva programacion debe ser mayor o igual a la fecha de la actividad programada");
                                 } else {
+                                    long stopTime = System.currentTimeMillis();
+                                    rendimientoCallService.crearRendimiento(
+                                            SiscapWebUtil.crearRendimiento(
+                                                    Thread.currentThread().getStackTrace()[1].getMethodName(),
+                                                    EnumFuncionalidad.PROGRAMACION_FECHAS.getNidFuncionalidadBigInteger(),
+                                                    SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                                                    usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+                                    );
                                     return true;
                                 }
                             } else {
+                                long stopTime = System.currentTimeMillis();
+                                rendimientoCallService.crearRendimiento(
+                                        SiscapWebUtil.crearRendimiento(
+                                                Thread.currentThread().getStackTrace()[1].getMethodName(),
+                                                EnumFuncionalidad.PROGRAMACION_FECHAS.getNidFuncionalidadBigInteger(),
+                                                SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                                                usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+                                );
                                 return true;
                             }
                         }
                     }
                 }
+                long stopTime = System.currentTimeMillis();
+                rendimientoCallService.crearRendimiento(
+                        SiscapWebUtil.crearRendimiento(
+                                Thread.currentThread().getStackTrace()[1].getMethodName(),
+                                EnumFuncionalidad.PROGRAMACION_FECHAS.getNidFuncionalidadBigInteger(),
+                                SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                                usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+                );
                 return true;
             }
         } catch (Exception e) {
@@ -137,6 +191,7 @@ public class ProgramacionFechaAdministrado extends AdministradorAbstracto implem
 
     public void crearProgramacionFecha() {
         logger.info(":: programacionFechaAdministrado.crearProgramacionFecha() :: Starting execution...");
+        long startTime = System.currentTimeMillis();
         if (validarFormulario(true)) {
             EstadoActividadGobAdministrado estadoActividadGobAdministrado = (EstadoActividadGobAdministrado) getFacesContext().getApplication().createValueBinding("#{estadoActividadGobAdministrado}").getValue(getFacesContext());
             UsuarioAdministrado usuarioAdministrado = (UsuarioAdministrado) getFacesContext().getApplication().createValueBinding("#{usuarioAdministrado}").getValue(getFacesContext());
@@ -149,7 +204,7 @@ public class ProgramacionFechaAdministrado extends AdministradorAbstracto implem
                 parameters.put("flgActivo", CoreConstant.STATUS_ACTIVE);
                 List<ProgramacionFecha> programacionFechaLista = programacionFechaCallService.loadProgramacionFechaList(new FindByParamBean(parameters, "nidProgramacionFecha"));
 
-                if (programacionFechaLista.size() > 0) {
+                if (!pe.gob.mimp.util.Util.esListaVacia(programacionFechaLista)) {
                     ProgramacionFecha programacionFechaEncontrado = programacionFechaLista.get(0);
                     programacionFechaEncontrado.setFlgActivo(BigInteger.ZERO);
                     programacionFechaEncontrado.setNidUsuario(usuarioAdministrado.getEntidadSeleccionada().getNidUsuario().toBigInteger());
@@ -176,11 +231,19 @@ public class ProgramacionFechaAdministrado extends AdministradorAbstracto implem
                 nuevoProgramacionFecha.setFlgActivo(BigInteger.ONE);
                 programacionFechaCallService.crearProgramacionFecha(nuevoProgramacionFecha);
 
-                if (null != nuevoProgramacionFecha.getNidProgramacionFecha()) {
-                    // Update List Browser
-                    loadProgramacionFechaList();
-                    RequestContext.getCurrentInstance().execute("PF('dialogoNuevoProgramacionFecha').hide()");
-                }
+//                if (null != nuevoProgramacionFecha.getNidProgramacionFecha()) {
+                // Update List Browser
+                loadProgramacionFechaList();
+                RequestContext.getCurrentInstance().execute("PF('dialogoNuevoProgramacionFecha').hide()");
+//                }
+                long stopTime = System.currentTimeMillis();
+                rendimientoCallService.crearRendimiento(
+                        SiscapWebUtil.crearRendimiento(
+                                Thread.currentThread().getStackTrace()[1].getMethodName(),
+                                EnumFuncionalidad.PROGRAMACION_FECHAS.getNidFuncionalidadBigInteger(),
+                                SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                                usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+                );
             } catch (Exception e) {
                 Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.INFO, "Error crear Programacion Fecha" + e.getMessage(), Util.tiempo());
             }
@@ -190,6 +253,7 @@ public class ProgramacionFechaAdministrado extends AdministradorAbstracto implem
 
     public void editarProgramacionFecha(ProgramacionFecha entidadSeleccionada) {
         logger.info(":: ProgramacionFechaAdministrado.editarProgramacionFecha() :: Starting execution...");
+        long startTime = System.currentTimeMillis();
         if (validarFormulario(false)) {
             EstadoActividadGobAdministrado estadoActividadGobAdministrado = (EstadoActividadGobAdministrado) getFacesContext().getApplication().createValueBinding("#{estadoActividadGobAdministrado}").getValue(getFacesContext());
             try {
@@ -203,7 +267,7 @@ public class ProgramacionFechaAdministrado extends AdministradorAbstracto implem
                     parameters.put("flgActivo", CoreConstant.STATUS_ACTIVE);
                     List<ProgramacionFecha> programacionFechaLista = programacionFechaCallService.loadProgramacionFechaList(new FindByParamBean(parameters, "nidProgramacionFecha"));
 
-                    if (programacionFechaLista.size() > 0) {
+                    if (!pe.gob.mimp.util.Util.esListaVacia(programacionFechaLista)) {
                         ProgramacionFecha programacionFechaEncontrado = programacionFechaLista.get(0);
                         programacionFechaEncontrado.setFlgActivo(BigInteger.ZERO);
                         programacionFechaEncontrado.setNidUsuario(usuarioAdministrado.getEntidadSeleccionada().getNidUsuario().toBigInteger());
@@ -225,6 +289,14 @@ public class ProgramacionFechaAdministrado extends AdministradorAbstracto implem
                     loadProgramacionFechaList();
                     RequestContext.getCurrentInstance().execute("PF('dialogoEditarProgramacionFecha').hide()");
                 }
+                long stopTime = System.currentTimeMillis();
+                rendimientoCallService.crearRendimiento(
+                        SiscapWebUtil.crearRendimiento(
+                                Thread.currentThread().getStackTrace()[1].getMethodName(),
+                                EnumFuncionalidad.PROGRAMACION_FECHAS.getNidFuncionalidadBigInteger(),
+                                SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                                usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+                );
             } catch (Exception e) {
                 Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.INFO, "Error editarProgramacionFecha" + e.getMessage(), Util.tiempo());
             }
@@ -234,6 +306,7 @@ public class ProgramacionFechaAdministrado extends AdministradorAbstracto implem
 
     public void anularProgramacionFecha(ProgramacionFecha entidadSeleccionada) {
         logger.info(":: ProgramacionFechaAdministrado.anularProgramacionFecha() :: Starting execution...");
+        long startTime = System.currentTimeMillis();
         try {
             UsuarioAdministrado usuarioAdministrado = (UsuarioAdministrado) getFacesContext().getApplication().createValueBinding("#{usuarioAdministrado}").getValue(getFacesContext());
             if (null != entidadSeleccionada) {
@@ -246,6 +319,14 @@ public class ProgramacionFechaAdministrado extends AdministradorAbstracto implem
                 // Update List Browser
                 loadProgramacionFechaList();
             }
+            long stopTime = System.currentTimeMillis();
+            rendimientoCallService.crearRendimiento(
+                    SiscapWebUtil.crearRendimiento(
+                            Thread.currentThread().getStackTrace()[1].getMethodName(),
+                            EnumFuncionalidad.PROGRAMACION_FECHAS.getNidFuncionalidadBigInteger(),
+                            SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                            usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+            );
         } catch (Exception e) {
             Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.INFO, "Error anularProgramacionFecha" + e.getMessage(), Util.tiempo());
         }
@@ -255,6 +336,7 @@ public class ProgramacionFechaAdministrado extends AdministradorAbstracto implem
     public String getProgramacionFechaById(BigInteger nidProgramacionFecha) {
         String resultado = "";
 
+        long startTime = System.currentTimeMillis();
         try {
             if (null != nidProgramacionFecha) {
                 ProgramacionFecha programacionFecha = programacionFechaCallService.find(new BigDecimal(nidProgramacionFecha));
@@ -263,6 +345,14 @@ public class ProgramacionFechaAdministrado extends AdministradorAbstracto implem
                     //resultado = programacionFecha.get();
                 }
             }
+            long stopTime = System.currentTimeMillis();
+            rendimientoCallService.crearRendimiento(
+                    SiscapWebUtil.crearRendimiento(
+                            Thread.currentThread().getStackTrace()[1].getMethodName(),
+                            EnumFuncionalidad.PROGRAMACION_FECHAS.getNidFuncionalidadBigInteger(),
+                            SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                            usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+            );
         } catch (Exception e) {
             Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.INFO, "{0}Obtener ProgramacionFecha" + e.getMessage(), Util.tiempo());
         }
@@ -287,18 +377,29 @@ public class ProgramacionFechaAdministrado extends AdministradorAbstracto implem
                 break;
         }
     }
-    
-    private void loadProgramacionFechaList() {
+
+    private void loadProgramacionFechaList() throws Exception {
         logger.info(":: ProgramacionFechaAdministrado.loadProgramacionFechaList :: Starting execution...");
+        long startTime = System.currentTimeMillis();
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("flgActivo", CoreConstant.STATUS_ACTIVE);
 
         this.programacionFechaList = programacionFechaCallService.loadProgramacionFechaList(new FindByParamBean(parameters, "nidProgramacionFecha"));
+        long stopTime = System.currentTimeMillis();
+        rendimientoCallService.crearRendimiento(
+                SiscapWebUtil.crearRendimiento(
+                        Thread.currentThread().getStackTrace()[1].getMethodName(),
+                        EnumFuncionalidad.PROGRAMACION_FECHAS.getNidFuncionalidadBigInteger(),
+                        SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                        usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+        );
         logger.info(":: ProgramacionFechaAdministrado.loadProgramacionFechaList :: Execution finish.");
     }
 
     public String generarFecha(String tipo) {
         String fechaReturn = "";
+
+        long startTime = System.currentTimeMillis();
         try {
             //ActividadGobAdministrado actividadGobAdministrado = (ActividadGobAdministrado) getFacesContext().getApplication().createValueBinding("#{actividadGobAdministrado}").getValue(getFacesContext());
 
@@ -331,6 +432,14 @@ public class ProgramacionFechaAdministrado extends AdministradorAbstracto implem
                         break;
                 }
             }
+            long stopTime = System.currentTimeMillis();
+            rendimientoCallService.crearRendimiento(
+                    SiscapWebUtil.crearRendimiento(
+                            Thread.currentThread().getStackTrace()[1].getMethodName(),
+                            EnumFuncionalidad.PROGRAMACION_FECHAS.getNidFuncionalidadBigInteger(),
+                            SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                            usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+            );
         } catch (Exception e) {
 
         }

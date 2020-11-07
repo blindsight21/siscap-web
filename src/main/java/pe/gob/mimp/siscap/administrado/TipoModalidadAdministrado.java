@@ -21,12 +21,19 @@ import pe.gob.mimp.constant.CoreConstant;
 import pe.gob.mimp.core.Internet;
 import pe.gob.mimp.core.Util;
 import pe.gob.mimp.siscap.modelo.TipoModalidad;
+import pe.gob.mimp.siscap.util.SiscapWebUtil;
+import pe.gob.mimp.siscap.ws.rendimiento.cliente.RendimientoCallService;
 import pe.gob.mimp.siscap.ws.tipomodalidad.cliente.TipoModalidadCallService;
+import pe.gob.mimp.util.EnumFuncionalidad;
 import pe.gob.mimp.utils.Funciones;
 
 @ManagedBean
 @ViewScoped
 public class TipoModalidadAdministrado extends AdministradorAbstracto implements Serializable {
+
+    UsuarioAdministrado usuarioAdministrado = (UsuarioAdministrado) getFacesContext().getApplication().createValueBinding("#{usuarioAdministrado}").getValue(getFacesContext());
+    @Inject
+    private RendimientoCallService rendimientoCallService;
 
     private Logger logger = Logger.getLogger(TipoModalidad.class.getName());
     private static final long serialVersionUID = 1L;
@@ -43,8 +50,22 @@ public class TipoModalidadAdministrado extends AdministradorAbstracto implements
 
     @PostConstruct
     public void initBean() {
-        this.entidadSeleccionada = new TipoModalidad();
-        loadTipoModalidadList();
+        try {
+            long startTime = System.currentTimeMillis();
+
+            this.entidadSeleccionada = new TipoModalidad();
+            loadTipoModalidadList();
+
+            long stopTime = System.currentTimeMillis();
+            rendimientoCallService.crearRendimiento(
+                    SiscapWebUtil.crearRendimiento(
+                            Thread.currentThread().getStackTrace()[1].getMethodName(),
+                            EnumFuncionalidad.TIPO_MODALIDAD.getNidFuncionalidadBigInteger(),
+                            SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                            usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+            );
+        } catch (Exception e) {
+        }
     }
 
     public TipoModalidad getEntidadSeleccionada() {
@@ -64,16 +85,31 @@ public class TipoModalidadAdministrado extends AdministradorAbstracto implements
     }
 
     public TipoModalidad getEntidad(String id) {
+
+        long startTime = System.currentTimeMillis();
         TipoModalidad tipoModalidad = null;
 
-        if ((null != id) || (false == id.equals(""))) {
-            tipoModalidad = tipoModalidadCallService.find(new BigDecimal(id));
+        try {
+            if ((null != id) || (false == id.equals(""))) {
+                tipoModalidad = tipoModalidadCallService.find(new BigDecimal(id));
+            }
+            long stopTime = System.currentTimeMillis();
+            rendimientoCallService.crearRendimiento(
+                    SiscapWebUtil.crearRendimiento(
+                            Thread.currentThread().getStackTrace()[1].getMethodName(),
+                            EnumFuncionalidad.TIPO_MODALIDAD.getNidFuncionalidadBigInteger(),
+                            SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                            usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+            );
+        } catch (Exception e) {
+            Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.INFO, "Error getEntidad" + e.getMessage(), Util.tiempo());
         }
         return tipoModalidad;
     }
 
     public boolean validarFormulario(boolean isNuevo) {
         try {
+            long startTime = System.currentTimeMillis();
             if (Funciones.esVacio(this.entidadSeleccionada.getTxtTipoModalidad().toUpperCase())) {
                 return enviarWarnMessage("Ingrese el Descripción.");
             } else {
@@ -91,6 +127,14 @@ public class TipoModalidadAdministrado extends AdministradorAbstracto implements
                     }
                 }
             }
+            long stopTime = System.currentTimeMillis();
+            rendimientoCallService.crearRendimiento(
+                    SiscapWebUtil.crearRendimiento(
+                            Thread.currentThread().getStackTrace()[1].getMethodName(),
+                            EnumFuncionalidad.TIPO_MODALIDAD.getNidFuncionalidadBigInteger(),
+                            SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                            usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+            );
             return true;
         } catch (Exception e) {
             Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.INFO, "Error validarFormulario" + e.getMessage(), Util.tiempo());
@@ -105,6 +149,7 @@ public class TipoModalidadAdministrado extends AdministradorAbstracto implements
 
     public void crearTipoModalidad() {
         logger.info(":: TipoModalidadAdministrado.crearTipoModalidad() :: Starting execution...");
+        long startTime = System.currentTimeMillis();
         if (validarFormulario(true)) {
             try {
                 UsuarioAdministrado usuarioAdministrado = (UsuarioAdministrado) getFacesContext().getApplication().createValueBinding("#{usuarioAdministrado}").getValue(getFacesContext());
@@ -119,10 +164,18 @@ public class TipoModalidadAdministrado extends AdministradorAbstracto implements
                 tipoModalidadCallService.crearTipoModalidad(tipoModalidad);
 
 //                if (null != tipoModalidad.getNidTipoModalidad()) {
-                    // Update List Browser
-                    loadTipoModalidadList();
-                    RequestContext.getCurrentInstance().execute("PF('dialogoNuevoTipoModalidad').hide()");
+                // Update List Browser
+                loadTipoModalidadList();
+                RequestContext.getCurrentInstance().execute("PF('dialogoNuevoTipoModalidad').hide()");
 //                }
+                long stopTime = System.currentTimeMillis();
+                rendimientoCallService.crearRendimiento(
+                        SiscapWebUtil.crearRendimiento(
+                                Thread.currentThread().getStackTrace()[1].getMethodName(),
+                                EnumFuncionalidad.TIPO_MODALIDAD.getNidFuncionalidadBigInteger(),
+                                SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                                usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+                );
             } catch (Exception e) {
                 Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.INFO, "Error crearTipoModalidad" + e.getMessage(), Util.tiempo());
             }
@@ -132,6 +185,7 @@ public class TipoModalidadAdministrado extends AdministradorAbstracto implements
 
     public void editarTipoModalidad(TipoModalidad entidadSeleccionada) {
         logger.info(":: TipoModalidadAdministrado.editarTipoModalidad() :: Starting execution...");
+        long startTime = System.currentTimeMillis();
         if (validarFormulario(false)) {
             try {
                 UsuarioAdministrado usuarioAdministrado = (UsuarioAdministrado) getFacesContext().getApplication().createValueBinding("#{usuarioAdministrado}").getValue(getFacesContext());
@@ -145,6 +199,14 @@ public class TipoModalidadAdministrado extends AdministradorAbstracto implements
                     loadTipoModalidadList();
                     RequestContext.getCurrentInstance().execute("PF('dialogoEditarTipoModalidad').hide()");
                 }
+                long stopTime = System.currentTimeMillis();
+                rendimientoCallService.crearRendimiento(
+                        SiscapWebUtil.crearRendimiento(
+                                Thread.currentThread().getStackTrace()[1].getMethodName(),
+                                EnumFuncionalidad.TIPO_MODALIDAD.getNidFuncionalidadBigInteger(),
+                                SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                                usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+                );
             } catch (Exception e) {
                 Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.INFO, "Error editarTipoModalidad" + e.getMessage(), Util.tiempo());
             }
@@ -154,6 +216,7 @@ public class TipoModalidadAdministrado extends AdministradorAbstracto implements
 
     public void anularTipoModalidad(TipoModalidad entidadSeleccionada) {
         logger.info(":: TipoModalidadAdministrado.anularTipoModalidad() :: Starting execution...");
+        long startTime = System.currentTimeMillis();
         try {
             UsuarioAdministrado usuarioAdministrado = (UsuarioAdministrado) getFacesContext().getApplication().createValueBinding("#{usuarioAdministrado}").getValue(getFacesContext());
             if (null != entidadSeleccionada) {
@@ -166,6 +229,14 @@ public class TipoModalidadAdministrado extends AdministradorAbstracto implements
                 // Update List Browser
                 loadTipoModalidadList();
             }
+            long stopTime = System.currentTimeMillis();
+            rendimientoCallService.crearRendimiento(
+                    SiscapWebUtil.crearRendimiento(
+                            Thread.currentThread().getStackTrace()[1].getMethodName(),
+                            EnumFuncionalidad.TIPO_MODALIDAD.getNidFuncionalidadBigInteger(),
+                            SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                            usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+            );
         } catch (Exception e) {
             Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.INFO, "Error anularTipoModalidad" + e.getMessage(), Util.tiempo());
         }
@@ -174,7 +245,7 @@ public class TipoModalidadAdministrado extends AdministradorAbstracto implements
 
     public String obtenerTipoModalidadporId(BigInteger nidTipoModalidad) {
         String resultado = "";
-
+        long startTime = System.currentTimeMillis();
         try {
             if (null != nidTipoModalidad) {
                 TipoModalidad tipoModalidad = tipoModalidadCallService.find(new BigDecimal(nidTipoModalidad));
@@ -183,6 +254,14 @@ public class TipoModalidadAdministrado extends AdministradorAbstracto implements
                     resultado = tipoModalidad.getTxtTipoModalidad();
                 }
             }
+            long stopTime = System.currentTimeMillis();
+            rendimientoCallService.crearRendimiento(
+                    SiscapWebUtil.crearRendimiento(
+                            Thread.currentThread().getStackTrace()[1].getMethodName(),
+                            EnumFuncionalidad.TIPO_MODALIDAD.getNidFuncionalidadBigInteger(),
+                            SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                            usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+            );
         } catch (Exception e) {
             Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.INFO, "{0}Obtener Medio" + e.getMessage(), Util.tiempo());
         }
@@ -194,8 +273,10 @@ public class TipoModalidadAdministrado extends AdministradorAbstracto implements
         entidadSeleccionada = new TipoModalidad();
     }
 
-    private void loadTipoModalidadList() {
+    private void loadTipoModalidadList() throws Exception {
         logger.info(":: TipoModalidadAdministrado.loadTipoModalidadList :: Starting execution...");
+
+        long startTime = System.currentTimeMillis();
         Map<String, Object> parameters = new HashMap<>();
         //parameters.put("flgActivo", CoreConstant.STATUS_ACTIVE);
 
@@ -203,6 +284,14 @@ public class TipoModalidadAdministrado extends AdministradorAbstracto implements
         findByParamBean.setParameters(parameters);
         findByParamBean.setOrderBy("nidTipoModalidad");
         this.tipoModalidadList = tipoModalidadCallService.loadTipoModalidadList(findByParamBean);
+        long stopTime = System.currentTimeMillis();
+        rendimientoCallService.crearRendimiento(
+                SiscapWebUtil.crearRendimiento(
+                        Thread.currentThread().getStackTrace()[1].getMethodName(),
+                        EnumFuncionalidad.TIPO_MODALIDAD.getNidFuncionalidadBigInteger(),
+                        SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                        usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+        );
         logger.info(":: TipoModalidadAdministrado.loadTipoModalidadList :: Execution finish.");
     }
 

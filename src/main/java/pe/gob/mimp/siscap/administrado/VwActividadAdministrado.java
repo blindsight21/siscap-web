@@ -9,15 +9,23 @@ import java.util.logging.Logger;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
 import javax.inject.Inject;
+import pe.gob.mimp.seguridad.administrado.UsuarioAdministrado;
 import pe.gob.mimp.siscap.modelo.VwActividad;
+import pe.gob.mimp.siscap.util.SiscapWebUtil;
 import pe.gob.mimp.siscap.ws.departamento.cliente.DepartamentoCallService;
+import pe.gob.mimp.siscap.ws.rendimiento.cliente.RendimientoCallService;
 import pe.gob.mimp.siscap.ws.vwactividad.cliente.VwActividadCallService;
+import pe.gob.mimp.util.EnumFuncionalidad;
 
 @SuppressWarnings("serial")
 @ManagedBean
 @ViewScoped
 public class VwActividadAdministrado extends AdministradorAbstracto implements Serializable {
 
+    UsuarioAdministrado usuarioAdministrado = (UsuarioAdministrado) getFacesContext().getApplication().createValueBinding("#{usuarioAdministrado}").getValue(getFacesContext());
+    @Inject
+    private RendimientoCallService rendimientoCallService;
+    
     private VwActividad entidad;
     private VwActividad entidadSeleccionada;
     private List<VwActividad> entidades;
@@ -70,11 +78,20 @@ public class VwActividadAdministrado extends AdministradorAbstracto implements S
 
     public List<VwActividad> obtenerActividadesDepartamento(BigDecimal nidDepartamento) {
 
+        long startTime = System.currentTimeMillis();
         List<VwActividad> actividadEncontradas = null;
         try {
             if (null != nidDepartamento) {
                 actividadEncontradas = vwActividadCallService.obtenerActividadesDepartamento(nidDepartamento);
             }
+            long stopTime = System.currentTimeMillis();
+            rendimientoCallService.crearRendimiento(
+                    SiscapWebUtil.crearRendimiento(
+                            Thread.currentThread().getStackTrace()[1].getMethodName(),
+                            EnumFuncionalidad.REPORTE.getNidFuncionalidadBigInteger(),
+                            SiscapWebUtil.obtenerTiempoEjecucionMillis(startTime, stopTime),
+                            usuarioAdministrado.getEntidad().getNidUsuario().toBigInteger())
+            );
         } catch (Exception e) {
             Logger.getLogger(Thread.currentThread().getStackTrace()[1].getMethodName()).log(Level.SEVERE, null, e);
         }
